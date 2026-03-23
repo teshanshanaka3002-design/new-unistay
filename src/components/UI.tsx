@@ -23,25 +23,26 @@ export const Button: React.FC<ButtonProps> = ({
   ...props 
 }) => {
   const variants = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm active:scale-[0.98]',
-    secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 active:scale-[0.98]',
-    outline: 'bg-transparent border-2 border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.98]',
-    ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 active:scale-[0.98]',
+    primary: 'bg-ink text-white hover:opacity-90 shadow-sm active:scale-[0.98]',
+    secondary: 'bg-paper text-ink border border-black/10 hover:bg-white active:scale-[0.98]',
+    outline: 'bg-transparent border border-black/10 text-ink hover:bg-paper active:scale-[0.98]',
+    ghost: 'bg-transparent text-ink hover:bg-black/5 active:scale-[0.98]',
     danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm active:scale-[0.98]',
+    gold: 'bg-gold text-white hover:opacity-90 shadow-sm active:scale-[0.98]',
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-xs rounded-md',
-    md: 'px-4 py-2 text-sm rounded-md',
-    lg: 'px-6 py-3 text-base rounded-md',
-    icon: 'p-2 rounded-md',
+    sm: 'px-4 py-2 text-xs rounded-full',
+    md: 'px-8 py-3 text-sm rounded-full',
+    lg: 'px-10 py-4 text-base rounded-full',
+    icon: 'p-3 rounded-full',
   };
 
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]',
-        variants[variant],
+        'inline-flex items-center justify-center font-medium transition-all focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]',
+        variants[variant as keyof typeof variants] || variants.primary,
         sizes[size],
         className
       )}
@@ -64,17 +65,17 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Input: React.FC<InputProps> = ({ label, error, className, ...props }) => {
   return (
-    <div className="space-y-1 w-full">
-      {label && <label className="text-sm font-semibold text-slate-700">{label}</label>}
+    <div className="space-y-2 w-full">
+      {label && <label className="text-[10px] font-bold uppercase tracking-widest text-ink/40 ml-4">{label}</label>}
       <input
         className={cn(
-          'flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 transition-all',
+          'flex h-12 w-full rounded-full border border-black/5 bg-white px-6 py-2 text-sm placeholder:text-ink/20 focus:outline-none focus:ring-4 focus:ring-gold/10 disabled:cursor-not-allowed disabled:opacity-50 transition-all',
           error && 'border-red-500 focus:ring-red-500',
           className
         )}
         {...props}
       />
-      {error && <p className="text-xs font-medium text-red-500 mt-1 ml-1">{error}</p>}
+      {error && <p className="text-[10px] font-bold text-red-500 mt-1 ml-4 uppercase tracking-widest">{error}</p>}
     </div>
   );
 };
@@ -89,16 +90,16 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Card: React.FC<CardProps> = ({ children, className, title, description, ...props }) => {
   return (
     <div 
-      className={cn('bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden', className)}
+      className={cn('bg-white rounded-[2rem] border border-black/5 shadow-sm overflow-hidden', className)}
       {...props}
     >
       {(title || description) && (
-        <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-          {title && <h3 className="text-xl font-bold text-slate-900">{title}</h3>}
-          {description && <p className="text-sm text-slate-500 mt-1">{description}</p>}
+        <div className="p-10 border-b border-black/5 bg-paper/50">
+          {title && <h3 className="text-3xl font-serif text-ink">{title}</h3>}
+          {description && <p className="text-sm text-ink/50 mt-2 leading-relaxed">{description}</p>}
         </div>
       )}
-      <div className="p-6">{children}</div>
+      <div className="p-10">{children}</div>
     </div>
   );
 };
@@ -110,22 +111,39 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer }) => {
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer, maxWidth = 'lg' }) => {
   if (!isOpen) return null;
 
+  const maxWidths = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-xl',
+    '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
+    '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl',
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-in fade-in duration-200">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between p-4 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="p-4">{children}</div>
-        {footer && <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">{footer}</div>}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className={cn(
+        "bg-white rounded-[2.5rem] shadow-2xl w-full overflow-hidden border border-black/5 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]",
+        maxWidths[maxWidth]
+      )}>
+        {title && (
+          <div className="flex items-center justify-between p-8 border-b border-black/5">
+            <h3 className="text-2xl font-serif text-ink">{title}</h3>
+            <button onClick={onClose} className="p-2 text-ink/40 hover:text-ink hover:bg-black/5 rounded-full transition-all">
+              <X size={24} />
+            </button>
+          </div>
+        )}
+        <div className="p-8 overflow-y-auto custom-scrollbar flex-1">{children}</div>
+        {footer && <div className="p-8 border-t border-black/5 bg-paper/30 flex justify-end gap-4">{footer}</div>}
       </div>
     </div>
   );

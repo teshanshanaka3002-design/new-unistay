@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { Clock, MessageSquare, ArrowLeft, CheckCircle2, Info, ShoppingBag } from 'lucide-react';
-import { Card, Button, Input, Badge } from '../UI';
 import { OrderItem, Order } from '../../types/canteen';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface OrderFlowProps {
   items: OrderItem[];
@@ -44,30 +49,33 @@ export const OrderFlow: React.FC<OrderFlowProps> = ({ items, canteenId, canteenN
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl mx-auto space-y-8 pb-20"
+      className="max-w-6xl mx-auto space-y-12 pb-32"
     >
       <button 
         onClick={onBack}
-        className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-medium transition-colors group"
+        className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ink/40 hover:text-ink transition-colors"
       >
-        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+        <ArrowLeft size={16} />
         Back to Menu
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
         {/* Left Column: Order Details */}
-        <div className="lg:col-span-7 space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-3xl font-bold text-slate-900 leading-tight">
-              Finalize Your Order
+        <div className="lg:col-span-7 space-y-16">
+          <div className="space-y-6">
+            <h1 className="text-6xl md:text-8xl font-serif text-ink leading-[0.85]">
+              Finalize <br />
+              <span className="italic">Your Order.</span>
             </h1>
-            <p className="text-slate-500 font-medium">Pre-order from <span className="text-blue-600 font-bold">{canteenName}</span></p>
+            <p className="text-xl text-ink/50 leading-relaxed">
+              Curating your meal from <span className="text-ink font-bold">{canteenName}</span>
+            </p>
           </div>
 
           {/* Pickup Time Selection */}
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <Clock size={24} className="text-blue-600" />
+          <div className="space-y-8">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-ink/30 flex items-center gap-3">
+              <Clock size={14} />
               Select Pickup Time
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -76,10 +84,10 @@ export const OrderFlow: React.FC<OrderFlowProps> = ({ items, canteenId, canteenN
                   key={time}
                   onClick={() => setPickupTime(time)}
                   className={cn(
-                    "p-4 rounded-2xl border-2 font-bold transition-all text-center",
+                    "p-6 rounded-2xl border font-bold transition-all text-center text-sm tracking-widest uppercase",
                     pickupTime === time 
-                      ? "border-blue-600 bg-blue-50 text-blue-600 shadow-lg shadow-blue-600/10" 
-                      : "border-slate-100 bg-white text-slate-600 hover:border-blue-200 hover:bg-slate-50"
+                      ? "border-gold bg-gold text-white shadow-2xl shadow-gold/20 scale-[1.02]" 
+                      : "border-black/5 bg-white text-ink/40 hover:border-black/10 hover:bg-paper"
                   )}
                 >
                   {time}
@@ -89,73 +97,69 @@ export const OrderFlow: React.FC<OrderFlowProps> = ({ items, canteenId, canteenN
           </div>
 
           {/* Notes */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <MessageSquare size={24} className="text-blue-600" />
+          <div className="space-y-8">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-ink/30 flex items-center gap-3">
+              <MessageSquare size={14} />
               Optional Notes
             </h2>
             <textarea
               placeholder="Any special requests? (e.g., less spicy, no onions)"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full h-32 p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none resize-none"
+              className="w-full h-40 p-8 rounded-[2rem] border border-black/5 bg-white text-ink font-medium focus:ring-4 focus:ring-gold/10 transition-all outline-none resize-none text-lg"
             />
           </div>
         </div>
 
         {/* Right Column: Order Summary */}
         <div className="lg:col-span-5">
-          <Card className="p-8 space-y-8 sticky top-24 border-slate-100 shadow-2xl shadow-blue-600/5 rounded-3xl">
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <ShoppingBag size={24} className="text-blue-600" />
+          <div className="p-10 rounded-[3rem] bg-white border border-black/5 shadow-2xl space-y-10 sticky top-32">
+            <div className="space-y-8">
+              <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-ink/30 flex items-center gap-3">
+                <ShoppingBag size={14} />
                 Order Summary
               </h2>
-              <div className="space-y-4 max-h-60 overflow-y-auto pr-2 scrollbar-hide">
+              <div className="space-y-6 max-h-80 overflow-y-auto pr-4 custom-scrollbar">
                 {items.map((item) => (
-                  <div key={item.menuItemId} className="flex justify-between items-center">
+                  <div key={item.menuItemId} className="flex justify-between items-start group">
                     <div className="space-y-1">
-                      <p className="font-bold text-slate-900">{item.name}</p>
-                      <p className="text-xs text-slate-500">Qty: {item.quantity}</p>
+                      <p className="font-serif text-xl text-ink group-hover:text-gold transition-colors">{item.name}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Quantity: {item.quantity}</p>
                     </div>
-                    <p className="font-bold text-blue-600">Rs. {item.price * item.quantity}</p>
+                    <p className="font-serif text-lg text-gold">LKR {item.price * item.quantity}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-4 pt-6 border-t border-slate-50">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold text-slate-900">Total Due</span>
-                <span className="text-2xl font-bold text-blue-600">Rs. {total}</span>
+            <div className="space-y-6 pt-10 border-t border-black/5">
+              <div className="flex justify-between items-end">
+                <span className="text-2xl font-serif text-ink">Total Due</span>
+                <span className="text-4xl font-serif text-gold">LKR {total}</span>
               </div>
-              <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                <CheckCircle2 size={18} />
-                Cash on Pickup
+              <div className="flex items-center gap-3 text-ink font-bold text-[10px] uppercase tracking-widest bg-paper p-4 rounded-2xl border border-black/5">
+                <CheckCircle2 size={16} className="text-gold" />
+                Cash on Pickup Only
               </div>
             </div>
 
-            <div className="space-y-3 pt-4">
-              <Button 
-                className="w-full h-14 text-lg rounded-2xl shadow-xl shadow-blue-600/20" 
+            <div className="space-y-4">
+              <button 
+                className="w-full bg-ink text-white py-6 rounded-2xl font-bold text-sm uppercase tracking-widest hover:scale-[1.02] transition-all duration-300 disabled:opacity-20 shadow-2xl" 
                 onClick={handleSubmit}
                 disabled={!pickupTime || isSubmitting}
               >
-                {isSubmitting ? 'Placing Order...' : 'Place Order Now'}
-              </Button>
-            </div>
-
-            <div className="pt-6 text-center">
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-blue-50 text-blue-700 text-[10px] leading-relaxed text-left">
+                {isSubmitting ? 'Processing...' : 'Place Order Now'}
+              </button>
+              
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-paper/50 text-ink/30 text-[9px] font-bold uppercase tracking-widest leading-relaxed">
                 <Info size={14} className="flex-shrink-0 mt-0.5" />
                 <p>By placing this order, you agree to collect it at the selected time and pay the total amount in cash at the canteen counter.</p>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </motion.div>
   );
 };
-
-import { cn } from '../../lib/utils';

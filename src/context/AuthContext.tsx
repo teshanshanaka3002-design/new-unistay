@@ -2,11 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Role = 'STUDENT' | 'BOARDING_OWNER' | 'RESTAURANT_OWNER' | 'ADMIN';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   name: string;
   role: Role;
+  phoneNumber?: string;
+  university?: string;
+  studentId?: string;
+  nationalId?: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -14,6 +19,7 @@ interface AuthContextType {
   token: string | null;
   login: (token: string, user: User) => void;
   logout: () => void;
+  updateUser: (newUser: User) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -49,6 +55,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
   };
 
+  const updateUser = (newUser: User) => {
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -56,6 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token,
         login,
         logout,
+        updateUser,
         isAuthenticated: !!token,
         isLoading,
       }}

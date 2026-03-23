@@ -2,6 +2,7 @@ export interface Canteen {
   id: string;
   name: string;
   location: string;
+  university: string;
   rating: number;
   description: string;
   image: string;
@@ -31,6 +32,11 @@ export interface Order {
   canteenId: string;
   canteenName: string;
   studentId: string;
+  studentName: string;
+  studentUniversity: string;
+  studentYear: string;
+  studentIdNumber: string;
+  studentPhone: string;
   items: OrderItem[];
   totalPrice: number;
   pickupTime: string;

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Button, Input, Modal } from '../components/UI';
 import { 
   Plus, 
@@ -14,41 +15,48 @@ import {
   CreditCard, 
   Star,
   Image as ImageIcon,
-  Upload
+  Upload,
+  MessageSquare,
+  Search,
+  Filter,
+  MapPin,
+  DollarSign,
+  Info,
+  Check,
+  Phone,
+  Mail,
+  User,
+  BarChart3
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
-// --- Boarding Owner Dashboard ---
-export const BoardingOwnerDashboard: React.FC = () => {
+// --- Dashboard Overview ---
+export const DashboardOverview: React.FC = () => {
+  const navigate = useNavigate();
   const stats = [
-    { label: 'Total Rooms', value: '12', icon: <Home className="text-blue-500" />, color: 'bg-blue-50' },
-    { label: 'Occupied', value: '8', icon: <Users className="text-emerald-500" />, color: 'bg-emerald-50' },
-    { label: 'Pending Requests', value: '4', icon: <CheckCircle2 className="text-amber-500" />, color: 'bg-amber-50' },
-    { label: 'Monthly Revenue', value: '$2,400', icon: <CreditCard className="text-purple-500" />, color: 'bg-purple-50' },
+    { label: 'Total Listings', value: '4', icon: <Home className="text-blue-500" />, color: 'bg-blue-50' },
+    { label: 'Total Bookings', value: '12', icon: <Users className="text-emerald-500" />, color: 'bg-emerald-50' },
+    { label: 'Pending Requests', value: '3', icon: <CheckCircle2 className="text-amber-500" />, color: 'bg-amber-50' },
+    { label: 'Average Rating', value: '4.8', icon: <Star className="text-purple-500" />, color: 'bg-purple-50' },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Boarding Management Dashboard</h1>
-          <p className="text-slate-500">Manage your properties and student bookings efficiently.</p>
-        </div>
-        <Button size="sm">
-          <Plus size={18} className="mr-2" />
-          Add New Room
-        </Button>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 p-6 md:p-12">
+      <div>
+        <h1 className="text-4xl font-serif text-ink">Owner Dashboard</h1>
+        <p className="text-ink/40 font-medium mt-2">Welcome back! Here's what's happening with your properties today.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <Card key={i} className="p-6 border-slate-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.color}`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {stats.map((stat) => (
+          <Card key={`stat-${stat.label}`} className="p-8 border-black/5 hover:shadow-2xl hover:shadow-ink/5 transition-all duration-500 group">
+            <div className="flex items-center gap-6">
+              <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-transform duration-500 group-hover:scale-110 ${stat.color}`}>
                 {stat.icon}
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">{stat.label}</p>
+                <p className="text-3xl font-bold text-ink mt-1">{stat.value}</p>
               </div>
             </div>
           </Card>
@@ -56,66 +64,41 @@ export const BoardingOwnerDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2" title="Recent Booking Requests" description="New student applications for your rooms">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="py-4 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Student</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Room Type</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Date</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {[1, 2, 3].map((_, i) => (
-                  <tr key={i} className="group hover:bg-slate-50 transition-colors">
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">JD</div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">John Doe</p>
-                          <p className="text-xs text-slate-500">john@uni.edu</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-sm text-slate-600 font-medium">Single Premium</td>
-                    <td className="py-4 px-4 text-sm text-slate-500">Mar 18, 2026</td>
-                    <td className="py-4 px-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-lg">
-                          <CheckCircle2 size={16} className="text-emerald-500" />
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-lg">
-                          <XCircle size={16} className="text-red-500" />
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-lg">
-                          <Eye size={16} className="text-slate-400" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <Card className="lg:col-span-2 p-8" title="Performance Overview" description="Monthly booking trends and revenue">
+          <div className="h-64 w-full bg-paper/50 rounded-[2rem] border border-dashed border-black/10 flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <BarChart3 className="mx-auto text-gold/40" size={48} />
+              <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Interactive Analytics Coming Soon</p>
+            </div>
           </div>
         </Card>
 
-        <Card title="Latest Reviews" description="What students are saying">
-          <div className="space-y-6">
-            {[1, 2].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-amber-500">
-                    {[1, 2, 3, 4, 5].map(s => <Star key={s} size={12} fill={s <= 4 ? "currentColor" : "none"} />)}
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">2 days ago</span>
-                </div>
-                <p className="text-sm text-slate-600 italic">"The room is very clean and the owner is very helpful. Highly recommended!"</p>
-                <p className="text-xs font-bold text-slate-900">— Sarah Wilson</p>
-              </div>
-            ))}
-            <Button variant="ghost" className="w-full text-xs font-bold uppercase tracking-widest text-blue-600">View All Reviews</Button>
+        <Card className="p-8" title="Quick Actions" description="Common management tasks">
+          <div className="space-y-4">
+            <Button 
+              className="w-full justify-start gap-4 h-14 rounded-2xl" 
+              variant="outline"
+              onClick={() => navigate('/owner/add-listing')}
+            >
+              <Plus size={20} className="text-gold" />
+              Add New Listing
+            </Button>
+            <Button 
+              className="w-full justify-start gap-4 h-14 rounded-2xl" 
+              variant="outline"
+              onClick={() => navigate('/owner/bookings')}
+            >
+              <Users size={20} className="text-gold" />
+              Review Bookings
+            </Button>
+            <Button 
+              className="w-full justify-start gap-4 h-14 rounded-2xl" 
+              variant="outline"
+              onClick={() => navigate('/owner/student-requests')}
+            >
+              <MessageSquare size={20} className="text-gold" />
+              Student Requests
+            </Button>
           </div>
         </Card>
       </div>
@@ -123,9 +106,51 @@ export const BoardingOwnerDashboard: React.FC = () => {
   );
 };
 
-// --- Add Room ---
-export const AddRoom: React.FC = () => {
+// --- Add New Listing Page ---
+export const AddListingForm: React.FC = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    location: '',
+    price: '',
+    roomType: '',
+    description: '',
+    facilities: [] as string[]
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.name) newErrors.name = 'Boarding Name is required';
+    if (!formData.location) newErrors.location = 'Location is required';
+    if (!formData.price || isNaN(Number(formData.price))) newErrors.price = 'Valid price is required';
+    if (!formData.roomType) newErrors.roomType = 'Room Type is required';
+    if (formData.description.length < 10) newErrors.description = 'Description must be at least 10 characters';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    setIsSubmitting(true);
+    // Mock API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsSubmitting(false);
+    alert('Listing created successfully!');
+  };
+
+  const toggleFacility = (facility: string) => {
+    setFormData(prev => ({
+      ...prev,
+      facilities: prev.facilities.includes(facility)
+        ? prev.facilities.filter(f => f !== facility)
+        : [...prev.facilities, facility]
+    }));
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -136,68 +161,136 @@ export const AddRoom: React.FC = () => {
     }
   };
 
+  const facilitiesList = ['WiFi', 'AC', 'Parking', 'Meals', 'Laundry'];
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Add New Room</h1>
-        <p className="text-slate-500">List a new accommodation option for students.</p>
+    <div className="max-w-4xl mx-auto p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-4">
+        <h1 className="text-4xl font-serif text-ink">Add New Listing</h1>
+        <p className="text-ink/40 font-medium">Create a compelling listing to attract the best students.</p>
       </div>
 
-      <Card className="p-8 border-slate-100 shadow-xl shadow-slate-200/50">
-        <form className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input label="Room Title" placeholder="e.g. Premium Single Suite" required />
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700">Room Type</label>
-              <select className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all">
-                <option>Single Room</option>
-                <option>Double Sharing</option>
-                <option>Triple Sharing</option>
-                <option>Apartment</option>
-              </select>
+      <Card className="p-12 border-black/5 shadow-2xl shadow-ink/5">
+        <form onSubmit={handleSubmit} className="space-y-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-2">
+              <Input 
+                label="Boarding Name" 
+                placeholder="e.g. Royal Student Suites" 
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                className={errors.name ? 'border-red-500' : ''}
+              />
+              {errors.name && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.name}</p>}
             </div>
-            <Input label="Monthly Rent ($)" type="number" placeholder="250" required />
-            <Input label="Security Deposit ($)" type="number" placeholder="500" required />
+
+            <div className="space-y-2">
+              <Input 
+                label="Location" 
+                placeholder="e.g. 123 University Ave, Colombo" 
+                value={formData.location}
+                onChange={e => setFormData({ ...formData, location: e.target.value })}
+                className={errors.location ? 'border-red-500' : ''}
+              />
+              {errors.location && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.location}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Input 
+                label="Price per month ($)" 
+                type="number" 
+                placeholder="250" 
+                value={formData.price}
+                onChange={e => setFormData({ ...formData, price: e.target.value })}
+                className={errors.price ? 'border-red-500' : ''}
+              />
+              {errors.price && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.price}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Room Type</label>
+              <select 
+                value={formData.roomType}
+                onChange={e => setFormData({ ...formData, roomType: e.target.value })}
+                className={`flex h-14 w-full rounded-[1.5rem] border border-black/5 bg-paper px-6 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold transition-all duration-300 ${errors.roomType ? 'border-red-500' : ''}`}
+              >
+                <option value="">Select Type</option>
+                <option value="Single">Single</option>
+                <option value="Double">Double</option>
+                <option value="Shared">Shared</option>
+              </select>
+              {errors.roomType && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.roomType}</p>}
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">Description</label>
+          <div className="space-y-6">
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Facilities</label>
+            <div className="flex flex-wrap gap-4">
+              {facilitiesList.map(facility => (
+                <button
+                  key={facility}
+                  type="button"
+                  onClick={() => toggleFacility(facility)}
+                  className={`px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 border ${
+                    formData.facilities.includes(facility)
+                      ? 'bg-ink text-white border-ink shadow-lg shadow-ink/20'
+                      : 'bg-white text-ink/40 border-black/5 hover:border-black/20'
+                  }`}
+                >
+                  {facility}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Description</label>
             <textarea 
-              className="flex min-h-[120px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all"
-              placeholder="Describe the room, amenities, and nearby facilities..."
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              className={`flex min-h-[160px] w-full rounded-[2rem] border border-black/5 bg-paper px-6 py-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold transition-all duration-300 ${errors.description ? 'border-red-500' : ''}`}
+              placeholder="Tell students about the environment, rules, and what makes your place special..."
             />
+            {errors.description && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.description}</p>}
           </div>
 
-          <div className="space-y-4">
-            <label className="text-sm font-semibold text-slate-900">Room Images</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="relative aspect-square rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center overflow-hidden group hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer">
+          <div className="space-y-6">
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Upload Images</label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="relative aspect-square rounded-[2rem] border-2 border-dashed border-black/5 bg-paper flex flex-col items-center justify-center overflow-hidden group hover:border-gold hover:bg-gold/5 transition-all cursor-pointer">
                 {previewImage ? (
                   <>
                     <img src={previewImage} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Button variant="secondary" size="sm" type="button" onClick={() => setPreviewImage(null)}>Change</Button>
                     </div>
                   </>
                 ) : (
                   <>
-                    <Upload size={24} className="text-slate-300 mb-2" />
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Upload</p>
+                    <Upload size={32} className="text-ink/20 mb-4" />
+                    <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Upload Photo</p>
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageChange} />
                   </>
                 )}
               </div>
               {[1, 2, 3].map(i => (
-                <div key={i} className="aspect-square rounded-2xl border-2 border-dashed border-slate-100 bg-slate-50/50 flex items-center justify-center text-slate-200">
-                  <ImageIcon size={24} />
+                <div key={i} className="aspect-square rounded-[2rem] border-2 border-dashed border-black/5 bg-paper/30 flex items-center justify-center text-ink/10">
+                  <ImageIcon size={32} />
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 pt-6 border-t border-slate-100">
-            <Button variant="outline" type="button">Cancel</Button>
-            <Button type="submit" className="px-8">Publish Listing</Button>
+          <div className="flex justify-end gap-6 pt-12 border-t border-black/5">
+            <Button variant="outline" type="button" className="px-12 rounded-full">Cancel</Button>
+            <Button 
+              type="submit" 
+              className="px-12 rounded-full" 
+              isLoading={isSubmitting}
+              disabled={Object.keys(errors).length > 0}
+            >
+              Publish Listing
+            </Button>
           </div>
         </form>
       </Card>
@@ -205,58 +298,516 @@ export const AddRoom: React.FC = () => {
   );
 };
 
-// --- Manage Rooms ---
-export const ManageRooms: React.FC = () => {
-  const rooms = [
-    { id: 1, title: 'Premium Single Suite', type: 'Single', price: 250, status: 'Available', image: 'https://picsum.photos/seed/room1/400/300' },
-    { id: 2, title: 'Standard Double Room', type: 'Double', price: 180, status: 'Occupied', image: 'https://picsum.photos/seed/room2/400/300' },
-    { id: 3, title: 'Cozy Shared Space', type: 'Triple', price: 120, status: 'Available', image: 'https://picsum.photos/seed/room3/400/300' },
-  ];
+// --- My Listings Page ---
+export const ListingsPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [listings, setListings] = useState([
+    { id: 1, name: 'Royal Student Suites', location: 'Colombo 07', price: 250, status: 'Available', image: 'https://picsum.photos/seed/boarding1/800/600' },
+    { id: 2, name: 'Green View Boarding', location: 'Kandy', price: 180, status: 'Not Available', image: 'https://picsum.photos/seed/boarding2/800/600' },
+    { id: 3, name: 'City Center Rooms', location: 'Colombo 03', price: 300, status: 'Available', image: 'https://picsum.photos/seed/boarding3/800/600' },
+  ]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<any>(null);
+
+  const handleDelete = () => {
+    if (selectedListing) {
+      setListings(prev => prev.filter(l => l.id !== selectedListing.id));
+      setIsDeleteModalOpen(false);
+      setSelectedListing(null);
+    }
+  };
+
+  const handleEdit = (listing: any) => {
+    setSelectedListing(listing);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setListings(prev => prev.map(l => l.id === selectedListing.id ? selectedListing : l));
+    setIsEditModalOpen(false);
+    setSelectedListing(null);
+    alert('Listing updated successfully!');
+  };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex justify-between items-center">
+    <div className="p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Manage Rooms</h1>
-          <p className="text-slate-500">Edit, delete, or change availability of your rooms.</p>
+          <h1 className="text-4xl font-serif text-ink">My Listings</h1>
+          <p className="text-ink/40 font-medium mt-2">Manage and monitor your property portfolio.</p>
         </div>
-        <Button size="sm">
-          <Plus size={18} className="mr-2" />
-          Add New Room
+        <Button 
+          className="rounded-full px-8"
+          onClick={() => navigate('/owner/add-listing')}
+        >
+          <Plus size={20} className="mr-2" />
+          Add New Listing
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {rooms.map((room) => (
-          <Card key={room.id} className="p-0 overflow-hidden border-slate-100 group">
-            <div className="relative aspect-video overflow-hidden">
-              <img src={room.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
-              <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-                room.status === 'Available' ? 'bg-emerald-500 text-white' : 'bg-slate-500 text-white'
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {listings.map((listing) => (
+          <Card key={listing.id} className="p-0 overflow-hidden border-black/5 group hover:shadow-2xl hover:shadow-ink/10 transition-all duration-700 rounded-[2.5rem]">
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <img src={listing.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" referrerPolicy="no-referrer" />
+              <div className={`absolute top-6 right-6 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl ${
+                listing.status === 'Available' ? 'bg-emerald-500 text-white' : 'bg-ink/60 text-white backdrop-blur-md'
               }`}>
-                {room.status}
+                {listing.status}
               </div>
             </div>
-            <div className="p-5 space-y-4">
-              <div className="space-y-1">
-                <h3 className="font-bold text-slate-900">{room.title}</h3>
-                <p className="text-xs text-slate-500">{room.type} • ${room.price}/mo</p>
+            <div className="p-8 space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-serif text-ink">{listing.name}</h3>
+                <div className="flex items-center gap-2 text-ink/40">
+                  <MapPin size={14} className="text-gold" />
+                  <span className="text-xs font-medium">{listing.location}</span>
+                </div>
+                <div className="flex items-center gap-2 text-ink/40">
+                  <DollarSign size={14} className="text-gold" />
+                  <span className="text-sm font-bold text-ink">${listing.price}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">/ month</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 pt-4 border-t border-slate-50">
-                <Button variant="outline" size="sm" className="flex-1 h-9">
-                  <Edit size={14} className="mr-2" />
+              <div className="flex items-center gap-3 pt-6 border-t border-black/5">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleEdit(listing)}
+                  className="flex-1 rounded-xl h-12 border-black/5 hover:bg-ink hover:text-white transition-all duration-500"
+                >
+                  <Edit size={16} className="mr-2" />
                   Edit
                 </Button>
-                <Button variant="outline" size="sm" className="h-9 w-9 p-0 text-red-500 hover:bg-red-50 hover:border-red-100">
-                  <Trash2 size={14} />
-                </Button>
-                <Button variant="outline" size="sm" className="h-9 w-9 p-0">
-                  <MoreVertical size={14} />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    setSelectedListing(listing);
+                    setIsDeleteModalOpen(true);
+                  }}
+                  className="w-12 h-12 p-0 rounded-xl border-black/5 text-red-500 hover:bg-red-50 hover:border-red-100 transition-all duration-500"
+                >
+                  <Trash2 size={16} />
                 </Button>
               </div>
             </div>
           </Card>
         ))}
+      </div>
+
+      {/* Edit Modal */}
+      <Modal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Listing"
+      >
+        {selectedListing && (
+          <form onSubmit={handleSaveEdit} className="space-y-6">
+            <Input 
+              label="Boarding Name" 
+              value={selectedListing.name}
+              onChange={e => setSelectedListing({ ...selectedListing, name: e.target.value })}
+            />
+            <Input 
+              label="Location" 
+              value={selectedListing.location}
+              onChange={e => setSelectedListing({ ...selectedListing, location: e.target.value })}
+            />
+            <Input 
+              label="Price" 
+              type="number"
+              value={selectedListing.price}
+              onChange={e => setSelectedListing({ ...selectedListing, price: Number(e.target.value) })}
+            />
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Status</label>
+              <select 
+                value={selectedListing.status}
+                onChange={e => setSelectedListing({ ...selectedListing, status: e.target.value })}
+                className="flex h-14 w-full rounded-[1.5rem] border border-black/5 bg-paper px-6 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold transition-all duration-300"
+              >
+                <option value="Available">Available</option>
+                <option value="Not Available">Not Available</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-4 pt-4">
+              <Button variant="outline" type="button" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+              <Button type="submit">Save Changes</Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal 
+        isOpen={isDeleteModalOpen} 
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Listing"
+      >
+        <div className="space-y-6">
+          <p className="text-ink/60">Are you sure you want to delete <span className="font-bold text-ink">{selectedListing?.name}</span>? This action cannot be undone.</p>
+          <div className="flex justify-end gap-4">
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete}>Delete Listing</Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+// --- Bookings Page ---
+export const BookingsPage: React.FC = () => {
+  const [bookings, setBookings] = useState([
+    { id: 1, student: 'John Doe', university: 'University of Colombo', contact: '+94 77 123 4567', status: 'Pending' },
+    { id: 2, student: 'Sarah Wilson', university: 'SLIIT', contact: '+94 71 987 6543', status: 'Approved' },
+    { id: 3, student: 'Mike Johnson', university: 'NSBM', contact: '+94 76 555 4444', status: 'Rejected' },
+  ]);
+
+  const handleStatus = (id: number, status: string) => {
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+  };
+
+  return (
+    <div className="p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-4">
+        <h1 className="text-4xl font-serif text-ink">Bookings</h1>
+        <p className="text-ink/40 font-medium">Manage student applications and resident status.</p>
+      </div>
+
+      <Card className="p-0 overflow-hidden border-black/5 rounded-[2.5rem]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-paper/50">
+                <th className="py-8 px-8 text-[10px] font-bold text-ink/30 uppercase tracking-[0.2em]">Student</th>
+                <th className="py-8 px-8 text-[10px] font-bold text-ink/30 uppercase tracking-[0.2em]">University</th>
+                <th className="py-8 px-8 text-[10px] font-bold text-ink/30 uppercase tracking-[0.2em]">Contact</th>
+                <th className="py-8 px-8 text-[10px] font-bold text-ink/30 uppercase tracking-[0.2em]">Status</th>
+                <th className="py-8 px-8 text-[10px] font-bold text-ink/30 uppercase tracking-[0.2em] text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/5">
+              {bookings.map((booking) => (
+                <tr key={booking.id} className="group hover:bg-paper transition-colors duration-500">
+                  <td className="py-8 px-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-ink text-white flex items-center justify-center font-serif text-lg font-bold">
+                        {booking.student.charAt(0)}
+                      </div>
+                      <p className="text-sm font-bold text-ink">{booking.student}</p>
+                    </div>
+                  </td>
+                  <td className="py-8 px-8 text-sm text-ink/60 font-medium">{booking.university}</td>
+                  <td className="py-8 px-8 text-sm text-ink/60 font-medium">{booking.contact}</td>
+                  <td className="py-8 px-8">
+                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                      booking.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 
+                      booking.status === 'Rejected' ? 'bg-red-100 text-red-700' : 
+                      'bg-amber-100 text-amber-700'
+                    }`}>
+                      {booking.status}
+                    </span>
+                  </td>
+                  <td className="py-8 px-8 text-right">
+                    <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      {booking.status === 'Pending' && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleStatus(booking.id, 'Approved')}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl px-6"
+                          >
+                            Approve
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleStatus(booking.id, 'Rejected')}
+                            className="text-red-500 border-red-100 hover:bg-red-50 rounded-xl px-6"
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      <Button size="sm" variant="outline" className="w-10 h-10 p-0 rounded-xl border-black/5">
+                        <Eye size={16} className="text-ink/20" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+// --- Student Requests Page ---
+export const RequestsPage: React.FC = () => {
+  const requests = [
+    { id: 1, name: 'Alex Thompson', budget: '$200 - $300', location: 'Colombo 07', facilities: ['WiFi', 'AC'] },
+    { id: 2, name: 'Emily Chen', budget: '$150 - $200', location: 'Kandy', facilities: ['Meals', 'Laundry'] },
+    { id: 3, name: 'David Silva', budget: '$100 - $150', location: 'Malabe', facilities: ['WiFi', 'Parking'] },
+  ];
+
+  return (
+    <div className="p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-4">
+        <h1 className="text-4xl font-serif text-ink">Student Requests</h1>
+        <p className="text-ink/40 font-medium">Students looking for accommodation in your area.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {requests.map((req) => (
+          <Card key={req.id} className="p-10 border-black/5 hover:shadow-2xl hover:shadow-ink/5 transition-all duration-700 rounded-[2.5rem] space-y-8">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 rounded-[1.5rem] bg-paper flex items-center justify-center text-ink font-serif text-2xl font-bold border border-black/5">
+                {req.name.charAt(0)}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-ink">{req.name}</h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gold">Active Request</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-ink/40 font-medium">Budget</span>
+                <span className="font-bold text-ink">{req.budget}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-ink/40 font-medium">Preferred Location</span>
+                <span className="font-bold text-ink">{req.location}</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Required Facilities</p>
+              <div className="flex flex-wrap gap-2">
+                {req.facilities.map(f => (
+                  <span key={f} className="px-4 py-1.5 bg-paper rounded-full text-[10px] font-bold uppercase tracking-widest text-ink/60 border border-black/5">
+                    {f}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <Button className="w-full rounded-2xl h-14 bg-ink hover:bg-gold hover:text-ink transition-all duration-500">
+              Contact Student
+            </Button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Reviews & Ratings Page ---
+export const ReviewsPage: React.FC = () => {
+  const reviews = [
+    { id: 1, student: 'Sarah Wilson', rating: 5, comment: 'Amazing place! Very quiet and perfect for studying. The owner is very kind.', date: 'Mar 15, 2026' },
+    { id: 2, student: 'James Miller', rating: 4, comment: 'Good facilities and close to the university. WiFi could be a bit faster though.', date: 'Mar 10, 2026' },
+    { id: 3, student: 'Anna Garcia', rating: 5, comment: 'Cleanest boarding I have ever stayed in. Highly recommend the single suites.', date: 'Mar 05, 2026' },
+  ];
+
+  return (
+    <div className="p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+        <div className="space-y-4">
+          <h1 className="text-4xl font-serif text-ink">Reviews & Ratings</h1>
+          <p className="text-ink/40 font-medium">Hear what your residents have to say about their stay.</p>
+        </div>
+        <Card className="p-8 bg-ink text-white border-none rounded-[2rem] flex items-center gap-8 shadow-2xl shadow-ink/20">
+          <div className="text-center">
+            <p className="text-5xl font-serif text-gold">4.8</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mt-2">Average Rating</p>
+          </div>
+          <div className="h-12 w-px bg-white/10" />
+          <div className="flex gap-1 text-gold">
+            {[1, 2, 3, 4, 5].map(s => <Star key={s} size={20} fill="currentColor" />)}
+          </div>
+        </Card>
+      </div>
+
+      <div className="space-y-8">
+        {reviews.map((review) => (
+          <Card key={review.id} className="p-10 border-black/5 hover:shadow-2xl hover:shadow-ink/5 transition-all duration-700 rounded-[2.5rem]">
+            <div className="flex flex-col md:flex-row justify-between gap-8">
+              <div className="space-y-6 flex-1">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-paper flex items-center justify-center text-ink font-serif text-lg font-bold border border-black/5">
+                    {review.student.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-ink">{review.student}</h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">{review.date}</p>
+                  </div>
+                </div>
+                <p className="text-lg text-ink/70 font-serif leading-relaxed italic">"{review.comment}"</p>
+              </div>
+              <div className="flex items-center gap-1 text-gold h-fit">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star key={s} size={16} fill={s <= review.rating ? "currentColor" : "none"} className={s <= review.rating ? "" : "text-ink/10"} />
+                ))}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Owner Profile Page ---
+export const OwnerProfilePage: React.FC = () => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: 'Robert Fox',
+    email: 'robert.fox@boarding.com',
+    phone: '+94 77 123 4567',
+    boardingName: 'Royal Student Suites'
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.name) newErrors.name = 'Name is required';
+    if (!formData.email || !formData.email.includes('@')) newErrors.email = 'Valid email is required';
+    if (!formData.phone) newErrors.phone = 'Phone is required';
+    if (!formData.boardingName) newErrors.boardingName = 'Boarding Name is required';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = () => {
+    if (validate()) {
+      setIsEditing(false);
+      alert('Profile updated successfully!');
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex justify-between items-end">
+        <div className="space-y-4">
+          <h1 className="text-4xl font-serif text-ink">Owner Profile</h1>
+          <p className="text-ink/40 font-medium">Manage your personal information and business details.</p>
+        </div>
+        {!isEditing && (
+          <Button onClick={() => setIsEditing(true)} variant="outline" className="rounded-full px-8">
+            <Edit size={18} className="mr-2" />
+            Edit Profile
+          </Button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-1 space-y-8">
+          <Card className="p-10 text-center space-y-6 rounded-[3rem] border-black/5 shadow-2xl shadow-ink/5">
+            <div className="relative w-32 h-32 mx-auto">
+              <div className="w-full h-full rounded-full bg-ink text-white flex items-center justify-center font-serif text-4xl font-bold shadow-2xl shadow-ink/20">
+                {formData.name.charAt(0)}
+              </div>
+              {isEditing && (
+                <button className="absolute bottom-0 right-0 w-10 h-10 bg-gold text-ink rounded-full flex items-center justify-center border-4 border-white hover:scale-110 transition-transform">
+                  <Upload size={16} />
+                </button>
+              )}
+            </div>
+            <div>
+              <h3 className="text-2xl font-serif text-ink">{formData.name}</h3>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gold mt-1">Verified Boarding Owner</p>
+            </div>
+            <div className="pt-6 border-t border-black/5 space-y-4">
+              <div className="flex items-center gap-4 text-ink/40">
+                <Mail size={16} className="text-gold" />
+                <span className="text-xs font-medium">{formData.email}</span>
+              </div>
+              <div className="flex items-center gap-4 text-ink/40">
+                <Phone size={16} className="text-gold" />
+                <span className="text-xs font-medium">{formData.phone}</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-8 bg-paper/50 border-dashed border-black/10 rounded-[2rem] space-y-4">
+            <div className="flex items-center gap-3 text-ink/40">
+              <Info size={16} />
+              <p className="text-[10px] font-bold uppercase tracking-widest">Account Status</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-ink">Identity Verified</span>
+              <CheckCircle2 size={18} className="text-emerald-500" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-ink">Business Registered</span>
+              <CheckCircle2 size={18} className="text-emerald-500" />
+            </div>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-2">
+          <Card className="p-12 border-black/5 shadow-2xl shadow-ink/5 rounded-[3rem]">
+            <div className="space-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Input 
+                    label="Full Name" 
+                    value={formData.name}
+                    disabled={!isEditing}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    className={errors.name ? 'border-red-500' : ''}
+                  />
+                  {errors.name && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.name}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Input 
+                    label="Email Address" 
+                    value={formData.email}
+                    disabled={!isEditing}
+                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    className={errors.email ? 'border-red-500' : ''}
+                  />
+                  {errors.email && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.email}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Input 
+                    label="Phone Number" 
+                    value={formData.phone}
+                    disabled={!isEditing}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    className={errors.phone ? 'border-red-500' : ''}
+                  />
+                  {errors.phone && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.phone}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Input 
+                    label="Primary Boarding Name" 
+                    value={formData.boardingName}
+                    disabled={!isEditing}
+                    onChange={e => setFormData({ ...formData, boardingName: e.target.value })}
+                    className={errors.boardingName ? 'border-red-500' : ''}
+                  />
+                  {errors.boardingName && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.boardingName}</p>}
+                </div>
+              </div>
+
+              {isEditing && (
+                <div className="flex justify-end gap-6 pt-10 border-t border-black/5">
+                  <Button variant="outline" onClick={() => setIsEditing(false)} className="px-12 rounded-full">Cancel</Button>
+                  <Button onClick={handleSave} className="px-12 rounded-full">Save Changes</Button>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

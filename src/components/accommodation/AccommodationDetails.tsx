@@ -2,21 +2,28 @@ import React, { useState } from 'react';
 import { 
   Star, MapPin, Home, ShieldCheck, Check, 
   Phone, MessageSquare, ArrowLeft, Calendar, 
-  Wifi, Wind, Bath, Car, Utensils, Info
+  Wifi, Wind, Bath, Car, Utensils, Info,
+  Share2, Heart, ChevronRight, ChevronLeft,
+  Plus
 } from 'lucide-react';
 import { Card, Button, Badge } from '../UI';
 import { Accommodation } from '../../types/accommodation';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { RatingSummary } from '../reviews/RatingSummary';
+import { ReviewList } from '../reviews/ReviewList';
+import { ReviewModal } from '../reviews/ReviewModal';
 
 interface AccommodationDetailsProps {
   accommodation: Accommodation;
   onBack: () => void;
   onBook: () => void;
+  onContact: () => void;
 }
 
-export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ accommodation, onBack, onBook }) => {
+export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ accommodation, onBack, onBook, onContact }) => {
   const [activeImage, setActiveImage] = useState(0);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   const getFacilityIcon = (facility: string) => {
     switch (facility.toLowerCase()) {
@@ -29,45 +36,92 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
     }
   };
 
+  // Calculate breakdown for RatingSummary
+  const breakdown = accommodation.reviews?.reduce((acc, review) => {
+    const rating = Math.round(review.rating);
+    acc[rating] = (acc[rating] || 0) + 1;
+    return acc;
+  }, {} as { [key: number]: number }) || {};
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-8 pb-20"
+      className="space-y-12 pb-24"
     >
-      <button 
-        onClick={onBack}
-        className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-medium transition-colors group"
-      >
-        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-        Back to Listings
-      </button>
+      {/* Review Modal */}
+      <ReviewModal 
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        onSubmit={(review) => {
+          console.log('New Review:', review);
+          // In a real app, we would update the state or call an API
+        }}
+        title="Rate Your Stay"
+        categories={['Cleanliness', 'Safety', 'Facilities', 'Location']}
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      {/* Navigation & Actions */}
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={onBack}
+          className="flex items-center gap-2 text-ink/40 hover:text-gold font-bold text-[10px] uppercase tracking-widest transition-colors group"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          Back to Listings
+        </button>
+        <div className="flex items-center gap-4">
+          <button className="p-2 rounded-full hover:bg-paper transition-colors text-ink/60">
+            <Share2 size={20} />
+          </button>
+          <button className="p-2 rounded-full hover:bg-paper transition-colors text-ink/60">
+            <Heart size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
         {/* Left Column: Gallery & Info */}
-        <div className="lg:col-span-8 space-y-12">
+        <div className="lg:col-span-8 space-y-16">
           {/* Image Gallery */}
-          <div className="space-y-4">
-            <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl">
+          <div className="space-y-6">
+            <div className="relative aspect-[16/9] rounded-[2.5rem] overflow-hidden shadow-2xl group">
               <img 
-                src={accommodation.images[activeImage]} 
+                src={accommodation.images?.[activeImage]} 
                 alt={accommodation.name}
-                className="w-full h-full object-cover transition-all duration-700"
+                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl text-sm font-bold text-slate-900 flex items-center gap-2 shadow-xl">
-                <Star size={16} className="text-amber-500 fill-amber-500" />
-                {accommodation.rating} ({accommodation.reviews.length} reviews)
+              <div className="absolute top-8 right-8 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-ink flex items-center gap-2 shadow-xl border border-white/20">
+                <Star size={14} className="text-gold fill-gold" />
+                {accommodation.rating} <span className="text-ink/40 font-medium">({accommodation.reviews.length} reviews)</span>
+              </div>
+              
+              {/* Gallery Navigation */}
+              <div className="absolute inset-y-0 left-4 right-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                  onClick={() => setActiveImage(prev => (prev > 0 ? prev - 1 : (accommodation.images?.length || 1) - 1))}
+                  className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-ink shadow-lg hover:bg-white transition-colors"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button 
+                  onClick={() => setActiveImage(prev => (prev < (accommodation.images?.length || 1) - 1 ? prev + 1 : 0))}
+                  className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-ink shadow-lg hover:bg-white transition-colors"
+                >
+                  <ChevronRight size={20} />
+                </button>
               </div>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-              {accommodation.images.map((img, i) => (
+            
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-2">
+              {accommodation.images?.map((img, i) => (
                 <button 
                   key={i}
                   onClick={() => setActiveImage(i)}
                   className={cn(
-                    "relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 transition-all duration-300 border-2",
-                    activeImage === i ? "border-blue-600 scale-105 shadow-lg" : "border-transparent opacity-70 hover:opacity-100"
+                    "relative w-28 h-20 rounded-2xl overflow-hidden flex-shrink-0 transition-all duration-300 border-2",
+                    activeImage === i ? "border-gold scale-105 shadow-lg" : "border-transparent opacity-50 hover:opacity-100"
                   )}
                 >
                   <img src={img} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -77,167 +131,179 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
           </div>
 
           {/* Header Info */}
-          <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge className="bg-blue-100 text-blue-700 border-none font-bold uppercase tracking-wider px-3 py-1">
+          <div className="space-y-8">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="px-4 py-1.5 rounded-full bg-paper text-ink/60 text-[10px] font-bold uppercase tracking-widest border border-black/5">
                 {accommodation.university}
-              </Badge>
-              <Badge className="bg-emerald-100 text-emerald-700 border-none font-bold uppercase tracking-wider px-3 py-1 flex items-center gap-1">
+              </span>
+              <span className="px-4 py-1.5 rounded-full bg-gold/10 text-gold text-[10px] font-bold uppercase tracking-widest border border-gold/20 flex items-center gap-1.5">
                 <ShieldCheck size={14} /> Verified Boarding
-              </Badge>
+              </span>
             </div>
             
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
+            <div className="space-y-4">
+              <h1 className="text-5xl md:text-6xl font-serif text-ink leading-[1.1]">
                 {accommodation.name}
               </h1>
-              <div className="flex items-center gap-2 text-slate-500 text-lg">
-                <MapPin size={20} className="text-blue-600" />
+              <div className="flex items-center gap-2 text-ink/60 text-lg font-medium">
+                <MapPin size={20} className="text-gold" />
                 <span>{accommodation.location}, {accommodation.city}</span>
               </div>
             </div>
 
-            <div className="prose prose-slate max-w-none">
-              <p className="text-slate-600 text-lg leading-relaxed">
+            <div className="max-w-3xl">
+              <p className="text-ink/70 text-xl leading-relaxed font-light">
                 {accommodation.description}
               </p>
             </div>
           </div>
 
           {/* Facilities */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Info size={24} className="text-blue-600" />
-              What this place offers
+          <div className="space-y-8 pt-8 border-t border-black/5">
+            <h2 className="text-3xl font-serif text-ink flex items-center gap-3">
+              <Info size={28} className="text-gold" />
+              Amenities & Features
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {accommodation.facilities.map((facility, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-md transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+              {accommodation.facilities?.map((facility, i) => (
+                <div key={i} className="flex items-center gap-5 p-6 rounded-[2rem] bg-paper/30 border border-black/5 hover:bg-white hover:shadow-xl hover:shadow-black/5 transition-all group">
+                  <div className="w-12 h-12 rounded-full bg-white text-gold flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                     {getFacilityIcon(facility)}
                   </div>
-                  <span className="font-medium text-slate-700">{facility}</span>
+                  <span className="font-bold text-ink/80 text-sm uppercase tracking-wider">{facility}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Map Placeholder */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Where you'll be</h2>
-            <div className="aspect-video rounded-3xl bg-slate-100 overflow-hidden relative group">
-              <img 
-                src="https://picsum.photos/seed/map/1200/600" 
-                className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all duration-700" 
-                referrerPolicy="no-referrer"
+          {/* Location & Map */}
+          <div className="space-y-8 pt-8 border-t border-black/5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl font-serif text-ink">Location</h2>
+              <div className="flex items-center gap-2 text-gold">
+                <MapPin size={18} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{accommodation.location}, {accommodation.city}</span>
+              </div>
+            </div>
+            <div className="aspect-video rounded-[2.5rem] bg-paper overflow-hidden relative group shadow-2xl shadow-black/5 border border-black/5">
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                scrolling="no"
+                marginHeight={0}
+                marginWidth={0}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(`${accommodation.location}, ${accommodation.city}, Sri Lanka`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                className="w-full h-full grayscale hover:grayscale-0 transition-all duration-700"
+                title={`Map of ${accommodation.name}`}
               />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white/90 backdrop-blur-md px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-200">
-                  <MapPin size={24} className="text-red-500" />
-                  <span className="font-bold text-slate-900">{accommodation.city} Campus Area</span>
+              <div className="absolute bottom-8 left-8 pointer-events-none">
+                <div className="bg-white/95 backdrop-blur-md px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20">
+                  <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center">
+                    <MapPin size={18} className="text-gold" />
+                  </div>
+                  <span className="font-serif text-lg text-ink">View on Google Maps</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Reviews */}
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-slate-900">Reviews</h2>
-              <div className="flex items-center gap-2 font-bold text-slate-900">
-                <Star size={20} className="text-amber-500 fill-amber-500" />
-                {accommodation.rating} • {accommodation.reviews.length} reviews
+          <div className="space-y-16 pt-16 border-t border-black/5">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-serif text-ink leading-tight">Student Reviews</h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Real feedback from verified residents</p>
               </div>
+              <Button 
+                onClick={() => setIsReviewModalOpen(true)}
+                className="h-14 px-8 rounded-full bg-ink text-gold text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 hover:scale-105 transition-all shadow-xl shadow-ink/10"
+              >
+                <Plus size={16} />
+                Write a Review
+              </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {accommodation.reviews.map((review) => (
-                <Card key={review.id} className="p-6 space-y-4 border-slate-100 bg-slate-50/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-                        {review.userName[0]}
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900">{review.userName}</p>
-                        <p className="text-xs text-slate-400">{review.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-amber-500">
-                      <Star size={14} fill="currentColor" />
-                      <span className="text-sm font-bold">{review.rating}</span>
-                    </div>
-                  </div>
-                  <p className="text-slate-600 text-sm italic leading-relaxed">
-                    "{review.comment}"
-                  </p>
-                </Card>
-              ))}
-            </div>
+
+            {/* Rating Summary */}
+            <RatingSummary 
+              averageRating={accommodation.rating}
+              totalReviews={accommodation.reviews?.length || 0}
+              breakdown={breakdown}
+              className="p-12 rounded-[3rem] bg-paper/20 border border-black/5"
+            />
+
+            {/* Review List */}
+            <ReviewList reviews={accommodation.reviews || []} />
           </div>
         </div>
 
         {/* Right Column: Booking Card */}
         <div className="lg:col-span-4">
-          <Card className="p-8 space-y-8 sticky top-24 border-slate-100 shadow-2xl shadow-blue-600/5 rounded-3xl">
+          <Card className="p-10 space-y-10 sticky top-24 border-black/5 shadow-2xl shadow-black/5 rounded-[3rem] bg-white">
             <div className="flex items-end justify-between">
-              <div className="space-y-1">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Monthly Rent</span>
-                <p className="text-3xl font-bold text-blue-600">
+              <div className="space-y-2">
+                <span className="text-[10px] text-ink/40 font-bold uppercase tracking-widest">Monthly Rent</span>
+                <p className="text-4xl font-serif text-ink">
                   Rs. {accommodation.price.toLocaleString()}
                 </p>
               </div>
-              <Badge className="bg-emerald-100 text-emerald-700 border-none font-bold">Available</Badge>
+              <Badge className="bg-gold/10 text-gold border-none font-bold uppercase text-[10px] tracking-widest px-4 py-1.5 rounded-full">Available</Badge>
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <p className="text-sm font-bold text-slate-900 uppercase tracking-wider">Room Types</p>
-                <div className="flex flex-wrap gap-2">
-                  {accommodation.roomTypes.map((type, i) => (
-                    <Badge key={i} variant="outline" className="border-slate-200 text-slate-600 font-medium px-3 py-1">
-                      {type}
-                    </Badge>
-                  ))}
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Room Type Available</p>
+                <div className="flex flex-wrap gap-3">
+                  <span className="px-4 py-2 rounded-full bg-paper text-ink/80 text-xs font-bold uppercase tracking-wider border border-black/5">
+                    {accommodation.roomType}
+                  </span>
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-slate-50">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+              <div className="space-y-5 pt-8 border-t border-black/5">
+                <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 rounded-full bg-paper flex items-center justify-center text-ink/60">
                     <Calendar size={20} />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 font-bold uppercase">Minimum Stay</p>
-                    <p className="font-bold text-slate-900">6 Months</p>
+                    <p className="text-[9px] text-ink/30 font-bold uppercase tracking-widest">Minimum Stay</p>
+                    <p className="font-bold text-ink text-sm uppercase tracking-wider">6 Months</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+                <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 rounded-full bg-paper flex items-center justify-center text-ink/60">
                     <ShieldCheck size={20} />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 font-bold uppercase">Security Deposit</p>
-                    <p className="font-bold text-slate-900">1 Month Rent</p>
+                    <p className="text-[9px] text-ink/30 font-bold uppercase tracking-widest">Security Deposit</p>
+                    <p className="font-bold text-ink text-sm uppercase tracking-wider">1 Month Rent</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-3 pt-4">
-              <Button className="w-full h-14 text-lg rounded-2xl shadow-xl shadow-blue-600/20" onClick={onBook}>
+            <div className="space-y-4 pt-4">
+              <Button className="w-full h-16 text-sm uppercase tracking-widest font-bold rounded-full bg-ink text-gold hover:bg-ink/90 shadow-xl shadow-ink/10 transition-all hover:scale-[1.02]" onClick={onBook}>
                 Book Now
               </Button>
-              <Button variant="outline" className="w-full h-14 text-lg rounded-2xl border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2">
-                <MessageSquare size={20} />
+              <Button 
+                variant="outline" 
+                className="w-full h-16 text-sm uppercase tracking-widest font-bold rounded-full border-black/10 hover:bg-paper flex items-center justify-center gap-3 transition-all"
+                onClick={onContact}
+              >
+                <MessageSquare size={20} className="text-gold" />
                 Contact Owner
               </Button>
             </div>
 
-            <div className="pt-6 text-center">
-              <p className="text-xs text-slate-400">
-                Managed by <span className="font-bold text-slate-900">{accommodation.ownerName}</span>
+            <div className="pt-8 text-center space-y-2">
+              <p className="text-[10px] text-ink/30 font-bold uppercase tracking-widest">
+                Managed by <span className="text-ink">{accommodation.ownerName}</span>
               </p>
-              <p className="text-[10px] text-slate-300 mt-1 uppercase tracking-widest">Response time: &lt; 2 hours</p>
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-[9px] text-ink/20 uppercase tracking-tighter font-bold">Response time: &lt; 2 hours</p>
+              </div>
             </div>
           </Card>
         </div>

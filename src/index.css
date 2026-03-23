@@ -1,32 +1,69 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --color-paper: #f5f5f0;
+  --color-ink: #1a1a1a;
+  --color-gold: #c5a059;
+  --color-muted: #e5e5e0;
+}
+
+/* Leaflet Custom Styling */
+.leaflet-container {
+  font-family: var(--font-sans) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 1.5rem !important;
+  padding: 0.5rem !important;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+  border: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+}
+
+.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 font-sans;
-  background-image: 
-    radial-gradient(at 0% 0%, hsla(210, 100%, 96%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(220, 100%, 96%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(230, 100%, 96%, 1) 0, transparent 50%);
-  background-attachment: fixed;
+  @apply bg-paper text-ink font-sans antialiased;
 }
 
-h1, h2, h3, h4, .font-display {
-  @apply font-display tracking-tight;
+h1, h2, h3, h4, .font-serif {
+  @apply font-serif tracking-tight;
 }
 
 .glass {
-  @apply bg-white/40 backdrop-blur-xl border border-white/30 shadow-xl shadow-slate-200/50;
-}
-
-.glass-dark {
-  @apply bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+  @apply bg-white/40 backdrop-blur-xl border border-white/30 shadow-sm;
 }
 
 .glass-card {
-  @apply bg-white/60 backdrop-blur-lg border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300;
+  @apply bg-white border border-black/5 shadow-sm hover:shadow-md transition-all duration-500 rounded-[2rem];
+}
+
+.btn-primary {
+  @apply bg-ink text-white px-8 py-3 rounded-full font-medium hover:opacity-90 transition-all duration-300 flex items-center gap-2;
+}
+
+.btn-secondary {
+  @apply bg-white text-ink border border-black/10 px-8 py-3 rounded-full font-medium hover:bg-paper transition-all duration-300 flex items-center gap-2;
+}
+
+.section-title {
+  @apply text-5xl md:text-7xl font-serif mb-6 leading-[0.9] text-ink;
+}
+
+.section-subtitle {
+  @apply text-lg text-ink/60 max-w-xl mb-10 leading-relaxed;
 }

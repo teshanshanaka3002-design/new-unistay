@@ -9,8 +9,10 @@ export interface Accommodation {
   rating: number;
   image: string;
   images: string[];
-  roomTypes: string[];
+  roomType: string;
+  propertyType: string;
   facilities: string[];
+  genderPreference: string;
   ownerName: string;
   ownerPhone: string;
   reviews: Review[];
@@ -30,4 +32,12 @@ export interface BookingRequest {
   duration: number;
   totalPrice: number;
   paymentProof: string; // base64 or URL
+  fullName: string;
+  university: string;
+  gender: string;
+  age: string;
+  studentId: string;
+  nationalId: string;
+  moveInDate?: string;
+  notes?: string;
 }

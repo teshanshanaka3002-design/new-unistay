@@ -32,11 +32,19 @@ export const LoginPage: React.FC = () => {
         return;
       }
 
-      // Mock user data based on email for testing
+      // Mock user data based on email for testing or saved registration role
       let role: Role = 'STUDENT';
-      if (formData.email.includes('admin')) role = 'ADMIN';
-      else if (formData.email.includes('boarding')) role = 'BOARDING_OWNER';
-      else if (formData.email.includes('restaurant')) role = 'RESTAURANT_OWNER';
+      const savedRole = localStorage.getItem(`mock_role_${formData.email}`);
+      
+      if (savedRole) {
+        role = savedRole as Role;
+      } else if (formData.email.includes('admin')) {
+        role = 'ADMIN';
+      } else if (formData.email.includes('boarding')) {
+        role = 'BOARDING_OWNER';
+      } else if (formData.email.includes('restaurant')) {
+        role = 'RESTAURANT_OWNER';
+      }
 
       login('mock-jwt-token', {
         id: '1',
@@ -46,8 +54,8 @@ export const LoginPage: React.FC = () => {
       });
 
       const dashboardPath = role === 'STUDENT' ? '/dashboard/student' : 
-                          role === 'BOARDING_OWNER' ? '/dashboard/boarding-owner' :
-                          role === 'RESTAURANT_OWNER' ? '/dashboard/restaurant-owner' :
+                          role === 'BOARDING_OWNER' ? '/owner-dashboard' :
+                          role === 'RESTAURANT_OWNER' ? '/restaurant-dashboard' :
                           '/dashboard/admin';
       
       navigate(dashboardPath);
@@ -59,73 +67,105 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-200 mb-4">
-            <ShieldCheck size={32} />
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Welcome Back</h1>
-          <p className="text-slate-500">Enter your credentials to access your dashboard</p>
+    <div className="min-h-screen bg-paper flex flex-col md:flex-row">
+      {/* Left Side: Branding/Editorial */}
+      <div className="hidden md:flex md:w-1/2 bg-ink p-20 flex-col justify-between relative overflow-hidden">
+        <div className="relative z-10">
+          <h1 className="text-8xl font-serif text-white leading-none tracking-tighter">
+            UNI<br />stay
+          </h1>
+          <p className="text-gold mt-8 text-xl font-serif italic">
+            The art of university living.
+          </p>
+        </div>
+        
+        <div className="relative z-10">
+          <div className="h-px w-20 bg-gold mb-8" />
+          <p className="text-white/40 text-sm uppercase tracking-[0.2em] font-bold">
+            Premium Student Accommodations & Dining
+          </p>
         </div>
 
-        <Card className="p-8 border-slate-200 shadow-xl shadow-slate-200/50">
-          <div className="mb-6 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
-            <p className="font-bold mb-1">Admin Access (Testing):</p>
-            <p>Email: <span className="font-mono">admin@uni.edu</span></p>
-            <p>Password: <span className="font-mono">AdminPassword123!</span></p>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg flex items-center gap-2 animate-in fade-in duration-200">
-                <span className="w-1.5 h-1.5 bg-red-600 rounded-full" />
-                {error}
-              </div>
-            )}
-            
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="name@university.edu"
-              required
-              value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
-            />
-            
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              required
-              value={formData.password}
-              onChange={e => setFormData({ ...formData, password: e.target.value })}
-            />
+        {/* Decorative Elements */}
+        <div className="absolute -bottom-20 -left-20 w-96 h-96 border border-white/5 rounded-full" />
+        <div className="absolute top-40 -right-20 w-64 h-64 border border-gold/10 rounded-full" />
+      </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">Remember me</span>
-              </label>
-              <Link to="/forgot-password" size="sm" className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
-                Forgot password?
-              </Link>
+      {/* Right Side: Login Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-paper">
+        <div className="w-full max-w-md space-y-12">
+          <div className="space-y-4">
+            <h2 className="text-5xl font-serif text-ink">Welcome Back</h2>
+            <p className="text-ink/40 font-medium">Please enter your credentials to continue your journey.</p>
+          </div>
+
+          <div className="space-y-8">
+            {/* Admin Access Info - Subtle */}
+            <div className="p-6 rounded-[2rem] bg-white border border-black/5 text-[10px] uppercase tracking-widest font-bold text-gold space-y-2">
+              <p className="text-gold">Quick Access (Testing):</p>
+              <div className="flex justify-between">
+                <span>Admin: admin@uni.edu</span>
+                <span>Pass: AdminPassword123!</span>
+              </div>
+              <div className="flex justify-between mt-2 pt-2 border-t border-black/5">
+                <span>Owner: boarding@uni.edu</span>
+                <span>Pass: any</span>
+              </div>
             </div>
 
-            <Button type="submit" className="w-full h-11" isLoading={isLoading}>
-              <LogIn size={18} className="mr-2" />
-              Sign In
-            </Button>
-          </form>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-3 px-8">
+                  <div className="w-1.5 h-1.5 bg-red-600 rounded-full" />
+                  {error}
+                </div>
+              )}
+              
+              <div className="space-y-6">
+                <Input
+                  label="Email Address"
+                  type="email"
+                  placeholder="name@university.edu"
+                  required
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                />
+                
+                <Input
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                  value={formData.password}
+                  onChange={e => setFormData({ ...formData, password: e.target.value })}
+                />
+              </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-            <p className="text-sm text-slate-500">
-              Don't have an account?{' '}
-              <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                Create an account
-              </Link>
-            </p>
+              <div className="flex items-center justify-between px-4">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input type="checkbox" className="w-4 h-4 rounded-full border-black/10 text-gold focus:ring-gold" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-ink/40 group-hover:text-gold transition-colors">Remember me</span>
+                </label>
+                <Link to="/forgot-password" size="sm" className="text-[10px] font-bold uppercase tracking-widest text-gold hover:text-ink transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
+
+              <Button type="submit" className="w-full" isLoading={isLoading}>
+                Sign In
+              </Button>
+            </form>
+
+            <div className="text-center">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-ink/40">
+                Don't have an account?{' '}
+                <Link to="/register" className="text-gold hover:text-ink transition-colors">
+                  Create an account
+                </Link>
+              </p>
+            </div>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );
@@ -156,6 +196,10 @@ export const RegisterPage: React.FC = () => {
     try {
       // Mock registration
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Save the role to local storage so the mock login can use it
+      localStorage.setItem(`mock_role_${formData.email}`, role);
+      
       navigate('/login');
     } catch (err) {
       setError('Registration failed. Please try again.');
@@ -171,49 +215,49 @@ export const RegisterPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 py-12">
-      <div className="w-full max-w-2xl space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Create an Account</h1>
-          <p className="text-slate-500">Join the university management system today</p>
+    <div className="min-h-screen bg-paper flex flex-col items-center justify-center p-8 py-20">
+      <div className="w-full max-w-4xl space-y-12">
+        <div className="text-center space-y-4">
+          <h1 className="text-6xl font-serif text-ink">Create an Account</h1>
+          <p className="text-ink/40 font-medium">Join the UNIstay community today.</p>
         </div>
 
-        <Card className="p-8 border-slate-200 shadow-xl shadow-slate-200/50">
-          <form onSubmit={handleSubmit} className="space-y-8">
+        <Card className="p-12">
+          <form onSubmit={handleSubmit} className="space-y-12">
             {error && (
-              <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-red-600 rounded-full" />
+              <div className="p-4 bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-3 px-8">
+                <div className="w-1.5 h-1.5 bg-red-600 rounded-full" />
                 {error}
               </div>
             )}
 
-            <div className="space-y-4">
-              <label className="text-sm font-semibold text-slate-900">Select Your Role</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-6">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Select Your Role</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {roles.map((r) => (
                   <button
                     key={r.id}
                     type="button"
                     onClick={() => setRole(r.id as Role)}
-                    className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                    className={`p-8 rounded-[2rem] border text-left transition-all duration-500 ${
                       role === r.id 
-                        ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600' 
-                        : 'border-slate-100 bg-white hover:border-slate-200'
+                        ? 'border-gold bg-paper shadow-lg shadow-gold/5' 
+                        : 'border-black/5 bg-white hover:border-black/10'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${
-                      role === r.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-6 transition-colors duration-500 ${
+                      role === r.id ? 'bg-ink text-white' : 'bg-paper text-ink/40'
                     }`}>
                       {r.icon}
                     </div>
-                    <p className="font-bold text-sm text-slate-900">{r.label}</p>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{r.desc}</p>
+                    <p className={`font-serif text-xl transition-colors ${role === r.id ? 'text-ink' : 'text-ink/60'}`}>{r.label}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30 mt-2 leading-relaxed">{r.desc}</p>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Input
                 label="Full Name"
                 placeholder="John Doe"
@@ -247,16 +291,15 @@ export const RegisterPage: React.FC = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full h-12 text-base" isLoading={isLoading}>
-              <UserPlus size={20} className="mr-2" />
+            <Button type="submit" className="w-full" isLoading={isLoading}>
               Create Account
             </Button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-            <p className="text-sm text-slate-500">
+          <div className="mt-12 pt-8 border-t border-black/5 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-ink/40">
               Already have an account?{' '}
-              <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+              <Link to="/login" className="text-gold hover:text-ink transition-colors">
                 Sign in instead
               </Link>
             </p>

@@ -9,16 +9,26 @@ import {
   FindAccommodation, 
   FindRestaurants, 
   MyBookings,
-  StudentRequests
+  StudentRequests,
+  AllReviewsPage
 } from './pages/StudentPages';
+import { ProfilePage } from './pages/ProfilePage';
 import { 
-  BoardingOwnerDashboard, 
-  AddRoom, 
-  ManageRooms 
+  DashboardOverview, 
+  AddListingForm, 
+  ListingsPage,
+  BookingsPage,
+  RequestsPage,
+  ReviewsPage,
+  OwnerProfilePage
 } from './pages/BoardingOwnerPages';
 import { 
   RestaurantOwnerDashboard, 
-  AddMenuItem 
+  MyRestaurantPage,
+  ManageMenu,
+  RestaurantOrders,
+  RestaurantReviews,
+  RestaurantPublicProfile
 } from './pages/RestaurantOwnerPages';
 import { 
   AdminDashboard, 
@@ -88,34 +98,86 @@ export default function App() {
               <DashboardLayout><StudentRequests /></DashboardLayout>
             </ProtectedRoute>
           } />
+          <Route path="/student/reviews" element={
+            <ProtectedRoute allowedRoles={['STUDENT']}>
+              <DashboardLayout><AllReviewsPage /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+
+          {/* Common Routes */}
+          <Route path="/profile" element={
+            <ProtectedRoute allowedRoles={['STUDENT', 'BOARDING_OWNER', 'RESTAURANT_OWNER', 'ADMIN']}>
+              <DashboardLayout><ProfilePage /></DashboardLayout>
+            </ProtectedRoute>
+          } />
           {/* Add more student routes as needed */}
 
           {/* Boarding Owner Routes */}
-          <Route path="/dashboard/boarding-owner" element={
+          <Route path="/owner-dashboard" element={
             <ProtectedRoute allowedRoles={['BOARDING_OWNER']}>
-              <DashboardLayout><BoardingOwnerDashboard /></DashboardLayout>
+              <DashboardLayout><DashboardOverview /></DashboardLayout>
             </ProtectedRoute>
           } />
-          <Route path="/boarding/add-room" element={
+          <Route path="/owner/listings" element={
             <ProtectedRoute allowedRoles={['BOARDING_OWNER']}>
-              <DashboardLayout><AddRoom /></DashboardLayout>
+              <DashboardLayout><ListingsPage /></DashboardLayout>
             </ProtectedRoute>
           } />
-          <Route path="/boarding/manage-rooms" element={
+          <Route path="/owner/add-listing" element={
             <ProtectedRoute allowedRoles={['BOARDING_OWNER']}>
-              <DashboardLayout><ManageRooms /></DashboardLayout>
+              <DashboardLayout><AddListingForm /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/owner/bookings" element={
+            <ProtectedRoute allowedRoles={['BOARDING_OWNER']}>
+              <DashboardLayout><BookingsPage /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/owner/student-requests" element={
+            <ProtectedRoute allowedRoles={['BOARDING_OWNER']}>
+              <DashboardLayout><RequestsPage /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/owner/reviews" element={
+            <ProtectedRoute allowedRoles={['BOARDING_OWNER']}>
+              <DashboardLayout><ReviewsPage /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/owner/profile" element={
+            <ProtectedRoute allowedRoles={['BOARDING_OWNER']}>
+              <DashboardLayout><OwnerProfilePage /></DashboardLayout>
             </ProtectedRoute>
           } />
 
           {/* Restaurant Owner Routes */}
-          <Route path="/dashboard/restaurant-owner" element={
+          <Route path="/restaurant-dashboard" element={
             <ProtectedRoute allowedRoles={['RESTAURANT_OWNER']}>
               <DashboardLayout><RestaurantOwnerDashboard /></DashboardLayout>
             </ProtectedRoute>
           } />
-          <Route path="/restaurant/add-menu" element={
+          <Route path="/restaurant/my-restaurant" element={
             <ProtectedRoute allowedRoles={['RESTAURANT_OWNER']}>
-              <DashboardLayout><AddMenuItem /></DashboardLayout>
+              <DashboardLayout><MyRestaurantPage /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/restaurant/menu" element={
+            <ProtectedRoute allowedRoles={['RESTAURANT_OWNER']}>
+              <DashboardLayout><ManageMenu /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/restaurant/orders" element={
+            <ProtectedRoute allowedRoles={['RESTAURANT_OWNER']}>
+              <DashboardLayout><RestaurantOrders /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/restaurant/reviews" element={
+            <ProtectedRoute allowedRoles={['RESTAURANT_OWNER']}>
+              <DashboardLayout><RestaurantReviews /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/restaurant/profile" element={
+            <ProtectedRoute allowedRoles={['RESTAURANT_OWNER']}>
+              <DashboardLayout><RestaurantPublicProfile /></DashboardLayout>
             </ProtectedRoute>
           } />
 

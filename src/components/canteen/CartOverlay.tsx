@@ -1,6 +1,5 @@
 import React from 'react';
-import { ShoppingCart, X, Plus, Minus, ArrowRight, Clock } from 'lucide-react';
-import { Card, Button, Badge } from '../UI';
+import { ShoppingBag, X, Plus, Minus, ArrowRight, Clock } from 'lucide-react';
 import { OrderItem } from '../../types/canteen';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -24,52 +23,47 @@ export const CartOverlay: React.FC<CartOverlayProps> = ({ isOpen, onClose, items
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-50"
           />
           <motion.div 
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-[60] flex flex-col"
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-paper shadow-2xl z-[60] flex flex-col"
           >
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/20">
-                  <ShoppingCart size={20} />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">Your Cart</h2>
-                  <p className="text-xs text-slate-500 font-medium">{items.length} items selected</p>
-                </div>
+            <div className="p-10 border-b border-black/5 flex items-center justify-between bg-white">
+              <div className="space-y-1">
+                <h2 className="text-3xl font-serif text-ink">Your Selection</h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">{items.length} items curated</p>
               </div>
               <button 
                 onClick={onClose}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
+                className="w-12 h-12 rounded-full border border-black/5 flex items-center justify-center text-ink/40 hover:text-ink hover:bg-paper transition-all"
               >
                 <X size={24} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-10 space-y-10">
               {items.length > 0 ? (
                 items.map((item) => (
-                  <div key={item.menuItemId} className="flex items-start gap-4 group">
-                    <div className="flex-1 space-y-1">
-                      <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{item.name}</h3>
-                      <p className="text-sm text-blue-600 font-bold">Rs. {item.price}</p>
+                  <div key={item.menuItemId} className="flex items-start gap-6 group">
+                    <div className="flex-1 space-y-2">
+                      <h3 className="text-xl font-serif text-ink group-hover:text-gold transition-colors">{item.name}</h3>
+                      <p className="text-sm font-bold text-gold">LKR {item.price}</p>
                     </div>
-                    <div className="flex items-center gap-3 bg-slate-50 px-2 py-1 rounded-xl border border-slate-100">
+                    <div className="flex items-center gap-4 bg-white p-1 rounded-full border border-black/5 shadow-sm">
                       <button 
                         onClick={() => onUpdateQuantity(item.menuItemId, -1)}
-                        className="w-8 h-8 rounded-lg bg-white text-slate-600 flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-all shadow-sm border border-slate-100"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-ink/40 hover:text-ink hover:bg-paper transition-all"
                       >
                         <Minus size={14} />
                       </button>
-                      <span className="font-bold text-slate-900 min-w-[20px] text-center">{item.quantity}</span>
+                      <span className="font-bold text-xs text-ink min-w-[20px] text-center">{item.quantity}</span>
                       <button 
                         onClick={() => onUpdateQuantity(item.menuItemId, 1)}
-                        className="w-8 h-8 rounded-lg bg-white text-slate-600 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm border border-slate-100"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-ink/40 hover:text-ink hover:bg-paper transition-all"
                       >
                         <Plus size={14} />
                       </button>
@@ -77,43 +71,43 @@ export const CartOverlay: React.FC<CartOverlayProps> = ({ isOpen, onClose, items
                   </div>
                 ))
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-60">
-                  <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
-                    <ShoppingCart size={40} />
+                <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-40">
+                  <div className="w-24 h-24 rounded-full border border-dashed border-ink/20 flex items-center justify-center">
+                    <ShoppingBag size={40} />
                   </div>
-                  <div className="space-y-1">
-                    <p className="font-bold text-slate-900">Your cart is empty</p>
-                    <p className="text-sm text-slate-500">Add some delicious food to get started!</p>
+                  <div className="space-y-2">
+                    <p className="text-2xl font-serif text-ink">Empty Selection</p>
+                    <p className="text-sm text-ink/50">Your culinary journey begins with a single choice.</p>
                   </div>
                 </div>
               )}
             </div>
 
             {items.length > 0 && (
-              <div className="p-6 border-t border-slate-100 bg-slate-50/50 space-y-6">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center text-slate-500 font-medium">
+              <div className="p-10 border-t border-black/5 bg-white space-y-8">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-ink/30">
                     <span>Subtotal</span>
-                    <span>Rs. {total}</span>
+                    <span>LKR {total}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-slate-900">Total</span>
-                    <span className="text-2xl font-bold text-blue-600">Rs. {total}</span>
+                  <div className="flex justify-between items-end">
+                    <span className="text-2xl font-serif text-ink">Total</span>
+                    <span className="text-4xl font-serif text-gold">LKR {total}</span>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-4 rounded-2xl bg-blue-50 text-blue-700 text-xs leading-relaxed border border-blue-100">
+                <div className="flex items-start gap-4 p-6 rounded-3xl bg-paper border border-black/5 text-[10px] font-bold uppercase tracking-widest text-ink/40 leading-relaxed">
                   <Clock size={16} className="flex-shrink-0 mt-0.5" />
-                  <p>This is a pre-order system. You will need to collect your food at the canteen and pay by cash on pickup.</p>
+                  <p>Pre-order system. Collection at canteen. Cash on pickup only.</p>
                 </div>
 
-                <Button 
-                  className="w-full h-14 text-lg rounded-2xl shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 group"
+                <button 
+                  className="w-full bg-ink text-white py-6 rounded-2xl font-bold text-sm uppercase tracking-widest hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 shadow-2xl"
                   onClick={onProceed}
                 >
                   Proceed to Order
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </Button>
+                  <ArrowRight size={18} />
+                </button>
               </div>
             )}
           </motion.div>

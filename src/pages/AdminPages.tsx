@@ -41,8 +41,8 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <Card key={i} className="p-6 border-slate-100 hover:shadow-md transition-shadow">
+        {stats.map((stat) => (
+          <Card key={`stat-${stat.label}`} className="p-6 border-black/5 hover:shadow-md transition-shadow bg-white">
             <div className="flex items-center justify-between mb-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.color}`}>
                 {stat.icon}
@@ -63,10 +63,10 @@ export const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card title="Pending Owner Approvals" description="Review and approve new boarding and restaurant owners">
           <div className="space-y-4">
-            {[1, 2, 3].map((_, i) => (
-              <div key={i} className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4">
+            {[1, 2, 3].map((item, i) => (
+              <div key={`approval-${item}`} className="p-4 rounded-xl border border-black/5 hover:bg-paper transition-colors flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
+                  <div className="w-10 h-10 rounded-full bg-paper flex items-center justify-center text-slate-500 font-bold">
                     {i === 0 ? 'BO' : 'RO'}
                   </div>
                   <div>
@@ -85,10 +85,10 @@ export const AdminDashboard: React.FC = () => {
 
         <Card title="Recent Payment Verifications" description="Verify student payment proofs for bookings">
           <div className="space-y-4">
-            {[1, 2, 3].map((_, i) => (
-              <div key={i} className="p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4">
+            {[1, 2, 3].map((item, i) => (
+              <div key={`payment-verify-${item}`} className="p-4 rounded-xl border border-black/5 hover:bg-paper transition-colors flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
                     <CreditCard size={20} />
                   </div>
                   <div>
@@ -145,7 +145,7 @@ export const UsersManagement: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
+              <tr className="bg-paper/50 border-b border-black/5">
                 <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest">User</th>
                 <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest">Role</th>
                 <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest">Joined Date</th>
@@ -153,12 +153,12 @@ export const UsersManagement: React.FC = () => {
                 <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
-              {[1, 2, 3, 4, 5].map((_, i) => (
-                <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
+            <tbody className="divide-y divide-black/5">
+              {[1, 2, 3, 4, 5].map((item, i) => (
+                <tr key={`user-${item}`} className="group hover:bg-paper transition-colors">
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                      <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-xs">
                         {['JD', 'AS', 'BJ', 'SW', 'MK'][i]}
                       </div>
                       <div>
@@ -169,12 +169,12 @@ export const UsersManagement: React.FC = () => {
                   </td>
                   <td className="py-4 px-6">
                     <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-                      i % 3 === 0 ? 'bg-blue-50 text-blue-600' : i % 3 === 1 ? 'bg-purple-50 text-purple-600' : 'bg-amber-50 text-amber-600'
+                      i % 3 === 0 ? 'bg-slate-100 text-slate-500' : i % 3 === 1 ? 'bg-purple-50 text-purple-600' : 'bg-amber-50 text-amber-600'
                     }`}>
                       {['STUDENT', 'BOARDING_OWNER', 'RESTAURANT_OWNER', 'STUDENT', 'BOARDING_OWNER'][i].replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="py-4 px-6 text-sm text-slate-500">Jan {10 + i}, 2026</td>
+                  <td className="py-4 px-6 text-sm text-slate-400">Jan {10 + i}, 2026</td>
                   <td className="py-4 px-6">
                     <span className={`flex items-center gap-1.5 text-xs font-medium ${i === 4 ? 'text-red-600' : 'text-emerald-600'}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${i === 4 ? 'bg-red-600' : 'bg-emerald-600'}`} />
@@ -199,7 +199,7 @@ export const UsersManagement: React.FC = () => {
             </tbody>
           </table>
         </div>
-        <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+        <div className="p-4 bg-paper/50 border-t border-black/5 flex items-center justify-between">
           <p className="text-xs text-slate-500 font-medium">Showing 5 of 1,240 users</p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="h-8 px-3 text-xs">Previous</Button>
