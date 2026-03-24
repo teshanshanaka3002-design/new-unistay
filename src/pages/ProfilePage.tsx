@@ -54,7 +54,7 @@ export const ProfilePage: React.FC = () => {
               </div>
             </div>
             <p className="text-ink/40 text-sm max-w-md">
-              Welcome to your UniStay profile. Here you can update your personal details, manage your account settings, and track your activity across the platform.
+              Welcome to your StudentNest profile. Here you can update your personal details, manage your account settings, and track your activity across the platform.
             </p>
           </div>
         </div>

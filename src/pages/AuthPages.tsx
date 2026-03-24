@@ -72,7 +72,7 @@ export const LoginPage: React.FC = () => {
       <div className="hidden md:flex md:w-1/2 bg-ink p-20 flex-col justify-between relative overflow-hidden">
         <div className="relative z-10">
           <h1 className="text-8xl font-serif text-white leading-none tracking-tighter">
-            UNI<br />stay
+            Student<br />Nest
           </h1>
           <p className="text-gold mt-8 text-xl font-serif italic">
             The art of university living.
@@ -219,7 +219,7 @@ export const RegisterPage: React.FC = () => {
       <div className="w-full max-w-4xl space-y-12">
         <div className="text-center space-y-4">
           <h1 className="text-6xl font-serif text-ink">Create an Account</h1>
-          <p className="text-ink/40 font-medium">Join the UNIstay community today.</p>
+          <p className="text-ink/40 font-medium">Join the StudentNest community today.</p>
         </div>
 
         <Card className="p-12">

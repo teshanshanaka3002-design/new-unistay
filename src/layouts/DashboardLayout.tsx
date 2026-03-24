@@ -109,9 +109,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
             className="flex items-center gap-3 group"
           >
             <div className="w-10 h-10 bg-ink rounded-full flex items-center justify-center text-white transition-transform duration-500 group-hover:rotate-[360deg]">
-              <span className="font-serif text-xl font-bold">U</span>
+              <span className="font-serif text-xl font-bold">S</span>
             </div>
-            <span className="font-serif text-2xl font-bold text-ink tracking-tight">UNIstay</span>
+            <span className="font-serif text-2xl font-bold text-ink tracking-tight">StudentNest</span>
           </Link>
 
           {/* Student Top Navigation */}
@@ -240,9 +240,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
         )}>
           <div className="flex items-center gap-3 mb-12">
             <div className="w-10 h-10 bg-ink rounded-full flex items-center justify-center text-white">
-              <span className="font-serif text-xl font-bold">U</span>
+              <span className="font-serif text-xl font-bold">S</span>
             </div>
-            <span className="font-serif text-2xl font-bold text-ink tracking-tight">UNIstay</span>
+            <span className="font-serif text-2xl font-bold text-ink tracking-tight">StudentNest</span>
           </div>
           <nav className="flex-1 space-y-2 overflow-y-auto">
             {filteredNavItems.map((item) => (
@@ -297,9 +297,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
             <div className="space-y-8">
               <Link to="/" className="flex items-center gap-3 group">
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-ink transition-transform duration-500 group-hover:rotate-[360deg]">
-                  <span className="font-serif text-2xl font-bold">U</span>
+                  <span className="font-serif text-2xl font-bold">S</span>
                 </div>
-                <span className="font-serif text-3xl font-bold text-white tracking-tight">UNIstay</span>
+                <span className="font-serif text-3xl font-bold text-white tracking-tight">StudentNest</span>
               </Link>
               <p className="text-white/40 text-sm leading-relaxed max-w-xs">
                 The ultimate student living companion. Connecting thousands of students to verified homes and healthy meals across the country.
@@ -362,7 +362,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
           {/* Bottom Bar */}
           <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">
-              © 2026 UNIstay. Built with passion for students.
+              © 2026 StudentNest. Built with passion for students.
             </p>
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-2">

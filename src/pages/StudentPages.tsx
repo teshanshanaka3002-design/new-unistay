@@ -66,7 +66,7 @@ export const StudentDashboard: React.FC = () => {
       image: "https://static.sliit.lk/wp-content/uploads/2024/09/13103301/SLIIT-Convocation-2024-September-6.jpeg",
       title: "Celebrate your success,",
       subtitle: "at the heart of campus.",
-      desc: "UNIstay connects you to verified student housing, real-time meal menus, and a thriving campus community."
+      desc: "StudentNest connects you to verified student housing, real-time meal menus, and a thriving campus community."
     },
     {
       image: "https://scontent.fcmb12-1.fna.fbcdn.net/v/t39.30808-6/473813801_920181070231389_5455240850749251132_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=2a1932&_nc_ohc=1JWLb8X7G6AQ7kNvwFvxjH9&_nc_oc=AdoTCgDZhMirOgEQxREFyOrrC7O-v4MDkg3_jmWibAj5CJDzBPeYnak_VskDkfbVJTTH2E-I9QN115gl39miv2gG&_nc_zt=23&_nc_ht=scontent.fcmb12-1.fna&_nc_gid=epTvNtsy-c0it9tu35Pd5Q&_nc_ss=7a30f&oh=00_AfyTPxRqjQyTogsYiWeWMQ8pk7qKHDngYFCB98zxvjG8iQ&oe=69C71389",
@@ -203,7 +203,7 @@ export const StudentDashboard: React.FC = () => {
               <span className="italic">Student Success.</span>
             </h2>
             <p className="text-xl text-ink/50 leading-relaxed max-w-lg">
-              University life is chaotic enough. Your digital tools shouldn't add to the noise. UNIstay is built with a philosophy of clarity, speed, and reliability.
+              University life is chaotic enough. Your digital tools shouldn't add to the noise. StudentNest is built with a philosophy of clarity, speed, and reliability.
             </p>
             <button className="flex items-center gap-4 text-xs font-bold uppercase tracking-[0.2em] text-ink hover:text-gold transition-colors group">
               Read our philosophy
@@ -267,7 +267,7 @@ export const StudentDashboard: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                text: "UNIstay made finding a boarding house so much easier. The verification process gives me peace of mind as an international student.",
+                text: "StudentNest made finding a boarding house so much easier. The verification process gives me peace of mind as an international student.",
                 author: "Sarah Johnson",
                 uni: "SLIIT",
                 avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150"
@@ -360,23 +360,23 @@ export const StudentDashboard: React.FC = () => {
           <div className="space-y-4">
             <FAQItem 
               question="What types of accommodation are available for students" 
-              answer="At UNIstay, students can choose from a variety of accommodation options. These include studio rooms, ensuites, shared apartments and private apartments."
+              answer="At StudentNest, students can choose from a variety of accommodation options. These include studio rooms, ensuites, shared apartments and private apartments."
               defaultOpen={true}
             />
             <FAQItem 
-              question="How to book student accommodation with UNIstay?" 
+              question="How to book student accommodation with StudentNest?" 
               answer="Booking is simple. Browse our verified listings, select your preferred stay, and click 'Book Now'. Our team will guide you through the verification and payment process."
             />
             <FAQItem 
               question="Is there any deposit or booking fee?" 
-              answer="Yes, a standard security deposit is usually required by property owners. UNIstay itself does not charge hidden booking fees for students."
+              answer="Yes, a standard security deposit is usually required by property owners. StudentNest itself does not charge hidden booking fees for students."
             />
             <FAQItem 
-              question="Are the rooms and apartments provided by UNIstay verified?" 
-              answer="Absolutely. Every property listed on UNIstay undergoes a rigorous manual inspection process to ensure it meets our standards for safety, cleanliness, and comfort."
+              question="Are the rooms and apartments provided by StudentNest verified?" 
+              answer="Absolutely. Every property listed on StudentNest undergoes a rigorous manual inspection process to ensure it meets our standards for safety, cleanliness, and comfort."
             />
             <FAQItem 
-              question="Does UNIstay Offer Group Bookings?" 
+              question="Does StudentNest Offer Group Bookings?" 
               answer="Yes, we support group bookings. If you and your friends want to stay together, simply reach out to our support team or mention it in your booking request."
             />
           </div>
@@ -1098,7 +1098,7 @@ export const AllReviewsPage: React.FC = () => {
       id: 1,
       name: "Sarah Johnson",
       university: "SLIIT",
-      comment: "UNIstay made finding a boarding house so much easier. The verification process gives me peace of mind as an international student.",
+      comment: "StudentNest made finding a boarding house so much easier. The verification process gives me peace of mind as an international student.",
       rating: 5,
       date: "2 days ago",
       verified: true,
