@@ -9,6 +9,7 @@ import { Accommodation, BookingRequest } from '../../types/accommodation';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { NOTE_MAX_WORDS, countWords, enforceWordLimit, sanitizeNic } from '../../lib/inputControl';
+import { getMinDate, isPastDate } from '../../lib/validation';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -45,6 +46,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => {
+      if (name === 'moveInDate') {
+        if (value && isPastDate(value)) {
+          return prev;
+        }
+        return { ...prev, [name]: value };
+      }
+
       if (name === 'nationalId') {
         return { ...prev, [name]: sanitizeNic(value) };
       }
@@ -252,6 +260,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
                   name="moveInDate"
                   value={formData.moveInDate}
                   onChange={handleInputChange}
+                  min={getMinDate()}
                   className="h-14 rounded-full bg-paper/50 border-none px-6"
                 />
               </div>

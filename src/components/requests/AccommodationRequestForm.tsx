@@ -4,7 +4,7 @@ import { Button } from '../UI';
 import { motion } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
 
-import { validateFullName, validateAge, validateDate, getMinDate } from '../../lib/validation';
+import { validateFullName, validateAge, validateDate, getMinDate, isPastDate } from '../../lib/validation';
 import { NOTE_MAX_WORDS, countWords, enforceWordLimit } from '../../lib/inputControl';
 
 interface AccommodationFormData {
@@ -83,6 +83,11 @@ export const AccommodationRequestForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'moveInDate' && value && isPastDate(value)) {
+      return;
+    }
+
     setFormData(prev => {
       if (name === 'notes') {
         return { ...prev, [name]: enforceWordLimit(prev.notes, value, NOTE_MAX_WORDS) };

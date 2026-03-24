@@ -10,6 +10,7 @@ import {
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { FilterState } from '../../types/filters';
+import { getMinDate, isPastDate } from '../../lib/validation';
 
 interface FilterSidebarProps {
   filters: FilterState;
@@ -296,7 +297,12 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilter
               <Input 
                 type="date" 
                 value={filters.moveInDate}
-                onChange={e => setFilters({ ...filters, moveInDate: e.target.value })}
+                min={getMinDate()}
+                onChange={e => {
+                  const nextDate = e.target.value;
+                  if (nextDate && isPastDate(nextDate)) return;
+                  setFilters({ ...filters, moveInDate: nextDate });
+                }}
                 className="h-12 rounded-2xl bg-paper/50 border-none text-sm"
               />
             </div>

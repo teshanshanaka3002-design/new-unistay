@@ -6,6 +6,7 @@ import {
 import { cn } from '../../lib/utils';
 import { FilterState } from '../../types/filters';
 import { Badge } from '../UI';
+import { getMinDate, isPastDate } from '../../lib/validation';
 
 interface TopFilterBarProps {
   filters: FilterState;
@@ -93,7 +94,12 @@ export const TopFilterBar: React.FC<TopFilterBarProps> = ({ filters, setFilters,
             <input 
               type="date"
               value={filters.moveInDate}
-              onChange={e => setFilters({ ...filters, moveInDate: e.target.value })}
+              min={getMinDate()}
+              onChange={e => {
+                const nextDate = e.target.value;
+                if (nextDate && isPastDate(nextDate)) return;
+                setFilters({ ...filters, moveInDate: nextDate });
+              }}
               className="appearance-none pl-10 pr-4 py-3 bg-white border border-black/5 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-ink/60 hover:text-ink hover:border-black/20 transition-all cursor-pointer outline-none shadow-sm min-w-[180px]"
             />
             <Calendar size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gold" />

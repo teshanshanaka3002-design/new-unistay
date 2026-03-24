@@ -15,10 +15,7 @@ export const validateFullName = (name: string) => {
 
 export const validateDate = (date: string) => {
   if (!date) return "Date is required";
-  const selectedDate = new Date(date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (selectedDate < today) return "Date cannot be in the past";
+  if (isPastDate(date)) return "Date cannot be in the past";
   return "";
 };
 
@@ -33,4 +30,9 @@ export const validateAge = (age: string | number) => {
 export const getMinDate = () => {
   const today = new Date();
   return today.toISOString().split('T')[0];
+};
+
+export const isPastDate = (date: string) => {
+  if (!date) return false;
+  return date < getMinDate();
 };
