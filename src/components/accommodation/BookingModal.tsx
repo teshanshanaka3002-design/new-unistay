@@ -34,6 +34,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
     age: '',
     studentId: '',
     nationalId: '',
+    contactNo: '',
     moveInDate: '',
     notes: ''
   });
@@ -45,16 +46,70 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Special validation for fullName - only allow letters and spaces
+    if (name === 'fullName') {
+      const lettersOnly = value.replace(/[^a-zA-Z\s]/g, '');
+      setFormData(prev => ({ ...prev, [name]: lettersOnly }));
+      return;
+    }
+    
+    // Special validation for nationalId - only allow numbers and 'V', max 12 characters
+    if (name === 'nationalId') {
+      const cleanValue = value.replace(/[^0-9Vv]/g, '').slice(0, 12);
+      setFormData(prev => ({ ...prev, [name]: cleanValue }));
+      
+      // Update validation
+      let nicError = '';
+      if (cleanValue && cleanValue.length < 10) nicError = 'National ID must be at least 10 characters';
+      setErrors(prev => ({ ...prev, nationalId: nicError }));
+      return;
+    }
+    
+    // Special validation for contactNo - only allow numbers, max 10 digits
+    if (name === 'contactNo') {
+      const numbersOnly = value.replace(/[^0-9]/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, [name]: numbersOnly }));
+      return;
+    }
+    
+    // Special validation for age - only allow numbers from 15-60, max 2 digits
+    if (name === 'age') {
+      const numbersOnly = value.replace(/[^0-9]/g, '').slice(0, 2);
+      // Only clear the field if it's a complete invalid age (not while typing)
+      const ageNum = parseInt(numbersOnly);
+      if (numbersOnly.length === 2 && (ageNum < 15 || ageNum > 60)) {
+        setFormData(prev => ({ ...prev, [name]: '' }));
+      } else {
+        setFormData(prev => ({ ...prev, [name]: numbersOnly }));
+      }
+      return;
+    }
+    
+    // Special validation for studentId - 2 letters followed by 8 numbers, max 10 characters
+    if (name === 'studentId') {
+      // Allow only letters for first 2 characters, then only numbers
+      let cleanValue = '';
+      for (let i = 0; i < Math.min(value.length, 10); i++) {
+        const char = value[i];
+        if (i < 2) {
+          // First 2 characters: only letters
+          cleanValue += char.replace(/[^a-zA-Z]/g, '');
+        } else {
+          // Remaining characters: only numbers
+          cleanValue += char.replace(/[^0-9]/g, '');
+        }
+      }
+      setFormData(prev => ({ ...prev, [name]: cleanValue }));
+      return;
+    }
+    
     setFormData(prev => {
       if (name === 'moveInDate') {
         if (value && isPastDate(value)) {
           return prev;
         }
         return { ...prev, [name]: value };
-      }
-
-      if (name === 'nationalId') {
-        return { ...prev, [name]: sanitizeNic(value) };
       }
 
       if (name === 'notes') {
@@ -64,14 +119,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
 
       return { ...prev, [name]: value };
     });
-
-    if (name === 'nationalId') {
-      const nicValue = sanitizeNic(value);
-      let nicError = '';
-      if (!nicValue) nicError = 'National ID is required';
-      else if (nicValue.length < 10) nicError = 'National ID must be at least 10 characters';
-      setErrors(prev => ({ ...prev, nationalId: nicError }));
-    }
 
     if (name === 'notes') {
       const tooManyWords = countWords(value) > NOTE_MAX_WORDS;
@@ -112,10 +159,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
     formData.fullName &&
     formData.university &&
     formData.age &&
+    parseInt(formData.age) >= 15 &&
+    parseInt(formData.age) <= 60 &&
     formData.studentId &&
+    formData.studentId.length === 10 &&
+    /^[a-zA-Z]{2}[0-9]{8}$/.test(formData.studentId) &&
     formData.nationalId &&
     formData.nationalId.length >= 10 &&
-    formData.nationalId.length <= 12 &&
+    formData.contactNo &&
+    formData.contactNo.length === 10 &&
     !errors.nationalId &&
     !errors.notes
   );
@@ -216,7 +268,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
                   name="age"
                   value={formData.age}
                   onChange={handleInputChange}
-                  placeholder="Enter your age"
+                  placeholder="Enter your age (15-60)"
                   className="h-14 rounded-full bg-paper/50 border-none px-6"
                   required
                 />
@@ -227,7 +279,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
                   name="studentId"
                   value={formData.studentId}
                   onChange={handleInputChange}
-                  placeholder="Enter Student ID"
+                  placeholder="Enter Student ID (2 letters + 8 numbers)"
                   className="h-14 rounded-full bg-paper/50 border-none px-6"
                   required
                 />
@@ -239,8 +291,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
                   name="nationalId"
                   value={formData.nationalId}
                   onChange={handleInputChange}
-                  placeholder="Enter NIC number"
-                  maxLength={12}
+                  placeholder="Enter NIC number (numbers and V only)"
                   className={cn(
                     "h-14 rounded-full bg-paper/50 px-6",
                     errors.nationalId ? "border-red-500 focus:ring-red-500/20" : formData.nationalId ? "border-emerald-500 focus:ring-emerald-500/20" : "border-black/5"
@@ -252,6 +303,18 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
                     {errors.nationalId}
                   </p>
                 )}
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-ink/40 uppercase tracking-widest ml-4">Contact Number</label>
+                <Input 
+                  type="text"
+                  name="contactNo"
+                  value={formData.contactNo}
+                  onChange={handleInputChange}
+                  placeholder="Enter contact number (10 digits)"
+                  className="h-14 rounded-full bg-paper/50 border-none px-6"
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-ink/40 uppercase tracking-widest ml-4">Move-in Date (Optional)</label>
@@ -267,8 +330,20 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-ink/40 uppercase tracking-widest ml-4">Room Type</label>
                 <div className="relative">
-                  <div className="w-full h-14 px-6 rounded-full border border-black/5 bg-paper/50 text-ink font-bold text-xs uppercase tracking-wider flex items-center">
-                    {accommodation.roomType}
+                  <select 
+                    name="roomType"
+                    value={roomType}
+                    onChange={(e) => setRoomType(e.target.value)}
+                    className="w-full h-14 px-6 rounded-full border border-black/5 bg-paper/50 text-ink font-bold text-xs uppercase tracking-wider focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all outline-none appearance-none"
+                  >
+                    <option value="Single">Single</option>
+                    <option value="Double">Double</option>
+                    <option value="Group">Group</option>
+                    <option value="Studio">Studio</option>
+                    <option value="Shared">Shared</option>
+                  </select>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40">
+                    <ChevronRight size={16} className="rotate-90" />
                   </div>
                 </div>
               </div>
