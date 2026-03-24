@@ -100,19 +100,6 @@ export const LoginPage: React.FC = () => {
           </div>
 
           <div className="space-y-8">
-            {/* Admin Access Info - Subtle */}
-            <div className="p-6 rounded-[2rem] bg-white border border-black/5 text-[10px] uppercase tracking-widest font-bold text-gold space-y-2">
-              <p className="text-gold">Quick Access (Testing):</p>
-              <div className="flex justify-between">
-                <span>Admin: admin@uni.edu</span>
-                <span>Pass: AdminPassword123!</span>
-              </div>
-              <div className="flex justify-between mt-2 pt-2 border-t border-black/5">
-                <span>Owner: boarding@uni.edu</span>
-                <span>Pass: any</span>
-              </div>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-8">
               {error && (
                 <div className="p-4 bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-3 px-8">

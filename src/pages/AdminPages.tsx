@@ -116,6 +116,104 @@ export const AdminDashboard: React.FC = () => {
 // --- Users Management ---
 export const UsersManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    nic: '',
+    phone: ''
+  });
+  const [formErrors, setFormErrors] = useState({
+    name: '',
+    email: '',
+    nic: '',
+    phone: ''
+  });
+
+  const validateForm = () => {
+    const errors = {
+      name: '',
+      email: '',
+      nic: '',
+      phone: ''
+    };
+    let isValid = true;
+
+    // Name validation: letters only, min 2 characters, max 50
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
+      errors.name = 'Name can only contain letters and spaces';
+      isValid = false;
+    } else if (formData.name.length < 2) {
+      errors.name = 'Name must be at least 2 characters';
+      isValid = false;
+    } else if (formData.name.length > 50) {
+      errors.name = 'Name must be less than 50 characters';
+      isValid = false;
+    }
+
+    // Email validation: strict email format
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+      isValid = false;
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
+      errors.email = 'Email format is invalid';
+      isValid = false;
+    }
+
+    // NIC validation: Sri Lankan NIC format (old: 9 digits + V, new: 12 digits)
+    if (!formData.nic.trim()) {
+      errors.nic = 'NIC is required';
+      isValid = false;
+    } else if (!/^(\d{9}[Vv]|\d{12})$/.test(formData.nic)) {
+      errors.nic = 'NIC must be 9 digits + V or 12 digits';
+      isValid = false;
+    }
+
+    // Phone validation: Sri Lankan phone number format
+    if (!formData.phone.trim()) {
+      errors.phone = 'Phone number is required';
+      isValid = false;
+    } else if (!/^(\+94|0)?[7]\d{8}$/.test(formData.phone.replace(/\s/g, ''))) {
+      errors.phone = 'Please enter a valid Sri Lankan phone number';
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (formErrors[name as keyof typeof formErrors]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      // Here you would typically send the data to your backend
+      console.log('New user data:', formData);
+      // Reset form and close modal
+      setFormData({ name: '', email: '', nic: '', phone: '' });
+      setFormErrors({ name: '', email: '', nic: '', phone: '' });
+      setIsAddUserModalOpen(false);
+      // You might want to show a success message here
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({ name: '', email: '', nic: '', phone: '' });
+    setFormErrors({ name: '', email: '', nic: '', phone: '' });
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -125,6 +223,15 @@ export const UsersManagement: React.FC = () => {
           <p className="text-slate-500">Manage all registered users and their account status.</p>
         </div>
         <div className="flex w-full md:w-auto gap-3">
+          <Button 
+            onClick={() => {
+              resetForm();
+              setIsAddUserModalOpen(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Add Users
+          </Button>
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
@@ -207,6 +314,74 @@ export const UsersManagement: React.FC = () => {
           </div>
         </div>
       </Card>
+
+      {/* Add User Modal */}
+      <Modal 
+        isOpen={isAddUserModalOpen} 
+        onClose={() => setIsAddUserModalOpen(false)}
+        title="Add New User"
+        maxWidth="md"
+        footer={
+          <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsAddUserModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmit}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Add User
+            </Button>
+          </div>
+        }
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Input
+            label="Full Name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            error={formErrors.name}
+            placeholder="Enter full name"
+            required
+          />
+          
+          <Input
+            label="Email Address"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            error={formErrors.email}
+            placeholder="user@example.com"
+            required
+          />
+          
+          <Input
+            label="National Identity Card (NIC)"
+            name="nic"
+            value={formData.nic}
+            onChange={handleInputChange}
+            error={formErrors.nic}
+            placeholder="123456789V or 123456789012"
+            required
+          />
+          
+          <Input
+            label="Phone Number"
+            name="phone"
+            type="tel"
+            value={formData.phone}
+            onChange={handleInputChange}
+            error={formErrors.phone}
+            placeholder="+94771234567 or 0771234567"
+            required
+          />
+        </form>
+      </Modal>
     </div>
   );
 };
