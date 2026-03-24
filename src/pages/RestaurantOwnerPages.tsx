@@ -22,6 +22,7 @@ import {
   Info,
   DollarSign
 } from 'lucide-react';
+import { sanitizePhoneNumber } from '../lib/inputControl';
 
 // --- Components ---
 const OrdersList: React.FC<{ orders: any[], onStatusChange: (id: string, status: string) => void }> = ({ orders, onStatusChange }) => (
@@ -760,10 +761,12 @@ export const RestaurantPublicProfile: React.FC = () => {
             <div className="space-y-2">
               <Input 
                 label="Phone Number" 
+                    type="text"
                 value={formData.phone}
                 disabled={!isEditing}
-                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                className={errors.phone ? 'border-red-500' : ''}
+                    onChange={e => setFormData({ ...formData, phone: sanitizePhoneNumber(e.target.value) })}
+                    maxLength={10}
+                    className={errors.phone ? 'border-red-500' : formData.phone ? 'border-green-500' : ''}
               />
               {errors.phone && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.phone}</p>}
             </div>

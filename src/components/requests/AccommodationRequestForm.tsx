@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
 
 import { validateFullName, validateAge, validateDate, getMinDate } from '../../lib/validation';
+import { NOTE_MAX_WORDS, countWords, enforceWordLimit } from '../../lib/inputControl';
 
 interface AccommodationFormData {
   fullName: string;
@@ -82,10 +83,16 @@ export const AccommodationRequestForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      if (name === 'notes') {
+        return { ...prev, [name]: enforceWordLimit(prev.notes, value, NOTE_MAX_WORDS) };
+      }
+      return { ...prev, [name]: value };
+    });
     // Real-time validation
     setErrors(prev => ({ ...prev, [name]: validate(name, value) }));
   };
+  const noteWordCount = countWords(formData.notes);
 
   const handleBlur = (name: string) => {
     setTouched(prev => ({ ...prev, [name]: true }));
@@ -326,7 +333,9 @@ export const AccommodationRequestForm: React.FC = () => {
         placeholder="Any other specific requirements..."
         value={formData.notes}
         onChange={handleChange}
-        maxChars={300}
+        maxWords={NOTE_MAX_WORDS}
+        error={noteWordCount >= NOTE_MAX_WORDS ? 'Word limit reached (300 words)' : ''}
+        success={noteWordCount > 0 && noteWordCount < NOTE_MAX_WORDS}
       />
 
       <div className="pt-6">

@@ -5,6 +5,7 @@ import { Card, Badge } from '../UI';
 import { motion } from 'motion/react';
 
 import { validateFullName, validatePhone } from '../../lib/validation';
+import { NOTE_MAX_WORDS, countWords, enforceWordLimit, sanitizePhoneNumber } from '../../lib/inputControl';
 
 interface CheckoutPageProps {
   items: OrderItem[];
@@ -55,8 +56,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   };
 
   const handleChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    setFormData(prev => {
+      let nextValue = value;
+      if (name === 'phone') {
+        nextValue = sanitizePhoneNumber(value);
+      }
+      if (name === 'notes') {
+        nextValue = enforceWordLimit(prev.notes, value, NOTE_MAX_WORDS);
+      }
+
+      setErrors(prevErrors => ({ ...prevErrors, [name]: validateField(name, nextValue) }));
+      return { ...prev, [name]: nextValue };
+    });
   };
 
   const handleBlur = (name: string) => {
@@ -98,6 +109,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     if (!touched[name]) return 'border-black/5';
     return errors[name] ? 'border-red-500 ring-red-500/10' : 'border-green-500 ring-green-500/10';
   };
+  const noteWordCount = countWords(formData.notes);
+  const isNoteLimitReached = noteWordCount >= NOTE_MAX_WORDS;
 
   return (
     <div className="min-h-screen bg-paper/30 pb-20">
@@ -193,11 +206,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-[10px] font-bold text-ink/40 uppercase tracking-widest ml-4">Phone Number</label>
                   <input 
-                    type="tel"
+                    type="text"
                     value={formData.phone}
                     onChange={e => handleChange('phone', e.target.value)}
                     onBlur={() => handleBlur('phone')}
                     placeholder="0771234567"
+                    maxLength={10}
                     className={`w-full h-14 px-6 rounded-full bg-white border ${getStatusClasses('phone')} text-ink font-bold text-xs uppercase tracking-wider focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all outline-none`}
                   />
                   {touched.phone && errors.phone && <p className="text-[10px] text-red-500 font-bold ml-4">{errors.phone}</p>}
@@ -209,8 +223,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     value={formData.notes}
                     onChange={e => handleChange('notes', e.target.value)}
                     placeholder="Any special requests or notes..."
-                    className="w-full h-32 p-6 rounded-[2rem] bg-white border border-black/5 text-ink font-medium text-sm focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all outline-none resize-none"
+                    className={`w-full h-32 p-6 rounded-[2rem] bg-white border ${isNoteLimitReached ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' : 'border-green-500 focus:ring-green-500/20 focus:border-green-500'} text-ink font-medium text-sm focus:ring-2 transition-all outline-none resize-none`}
                   />
+                  <div className="flex items-center justify-between px-4">
+                    <p className={`text-[10px] font-bold uppercase tracking-widest ${isNoteLimitReached ? 'text-red-500' : 'text-emerald-600'}`}>
+                      {noteWordCount} / {NOTE_MAX_WORDS} words
+                    </p>
+                    {isNoteLimitReached && (
+                      <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">
+                        Word limit reached
+                      </p>
+                    )}
+                  </div>
                 </div>
               </form>
             </section>

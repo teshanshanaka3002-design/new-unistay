@@ -29,6 +29,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { sanitizePhoneNumber } from '../lib/inputControl';
 
 // --- Dashboard Overview ---
 export const DashboardOverview: React.FC = () => {
@@ -670,7 +671,7 @@ export const OwnerProfilePage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: 'Robert Fox',
     email: 'robert.fox@boarding.com',
-    phone: '+94 77 123 4567',
+    phone: '0771234567',
     boardingName: 'Royal Student Suites'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -680,6 +681,7 @@ export const OwnerProfilePage: React.FC = () => {
     if (!formData.name) newErrors.name = 'Name is required';
     if (!formData.email || !formData.email.includes('@')) newErrors.email = 'Valid email is required';
     if (!formData.phone) newErrors.phone = 'Phone is required';
+    else if (!/^\d{10}$/.test(formData.phone)) newErrors.phone = 'Phone must be exactly 10 digits';
     if (!formData.boardingName) newErrors.boardingName = 'Boarding Name is required';
     
     setErrors(newErrors);
@@ -780,10 +782,12 @@ export const OwnerProfilePage: React.FC = () => {
                 <div className="space-y-2">
                   <Input 
                     label="Phone Number" 
+                    type="text"
                     value={formData.phone}
                     disabled={!isEditing}
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                    className={errors.phone ? 'border-red-500' : ''}
+                    onChange={e => setFormData({ ...formData, phone: sanitizePhoneNumber(e.target.value) })}
+                    maxLength={10}
+                    className={errors.phone ? 'border-red-500' : formData.phone ? 'border-green-500' : ''}
                   />
                   {errors.phone && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.phone}</p>}
                 </div>

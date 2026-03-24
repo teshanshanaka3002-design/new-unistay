@@ -8,6 +8,7 @@ import { Card, Button, Input, Modal, Badge } from '../UI';
 import { Accommodation, BookingRequest } from '../../types/accommodation';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { NOTE_MAX_WORDS, countWords, enforceWordLimit, sanitizeNic } from '../../lib/inputControl';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
   const [paymentProof, setPaymentProof] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
+  const [errors, setErrors] = useState<{ nationalId?: string; notes?: string }>({});
 
   // Form State
   const [formData, setFormData] = useState({
@@ -42,7 +44,31 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      if (name === 'nationalId') {
+        return { ...prev, [name]: sanitizeNic(value) };
+      }
+
+      if (name === 'notes') {
+        const limitedNotes = enforceWordLimit(prev.notes, value, NOTE_MAX_WORDS);
+        return { ...prev, [name]: limitedNotes };
+      }
+
+      return { ...prev, [name]: value };
+    });
+
+    if (name === 'nationalId') {
+      const nicValue = sanitizeNic(value);
+      let nicError = '';
+      if (!nicValue) nicError = 'National ID is required';
+      else if (nicValue.length < 10) nicError = 'National ID must be at least 10 characters';
+      setErrors(prev => ({ ...prev, nationalId: nicError }));
+    }
+
+    if (name === 'notes') {
+      const tooManyWords = countWords(value) > NOTE_MAX_WORDS;
+      setErrors(prev => ({ ...prev, notes: tooManyWords ? `Maximum ${NOTE_MAX_WORDS} words allowed` : '' }));
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +100,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
     onClose();
   };
 
-  const isStep1Valid = formData.fullName && formData.university && formData.age && formData.studentId && formData.nationalId;
+  const isStep1Valid = Boolean(
+    formData.fullName &&
+    formData.university &&
+    formData.age &&
+    formData.studentId &&
+    formData.nationalId &&
+    formData.nationalId.length >= 10 &&
+    formData.nationalId.length <= 12 &&
+    !errors.nationalId &&
+    !errors.notes
+  );
+  const noteWordCount = countWords(formData.notes);
+  const isNoteLimitReached = noteWordCount >= NOTE_MAX_WORDS;
 
   return (
     <Modal 
@@ -189,13 +227,23 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-ink/40 uppercase tracking-widest ml-4">National ID (NIC)</label>
                 <Input 
+                  type="text"
                   name="nationalId"
                   value={formData.nationalId}
                   onChange={handleInputChange}
                   placeholder="Enter NIC number"
-                  className="h-14 rounded-full bg-paper/50 border-none px-6"
+                  maxLength={12}
+                  className={cn(
+                    "h-14 rounded-full bg-paper/50 px-6",
+                    errors.nationalId ? "border-red-500 focus:ring-red-500/20" : formData.nationalId ? "border-emerald-500 focus:ring-emerald-500/20" : "border-black/5"
+                  )}
                   required
                 />
+                {errors.nationalId && (
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 ml-4">
+                    {errors.nationalId}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-ink/40 uppercase tracking-widest ml-4">Move-in Date (Optional)</label>
@@ -223,8 +271,26 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
                 value={formData.notes}
                 onChange={handleInputChange}
                 placeholder="Any special requests or notes..."
-                className="w-full h-32 p-6 rounded-[2rem] bg-paper/50 border border-black/5 text-ink font-medium text-sm focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all outline-none resize-none"
+                className={cn(
+                  "w-full h-32 p-6 rounded-[2rem] bg-paper/50 border text-ink font-medium text-sm focus:ring-2 transition-all outline-none resize-none",
+                  isNoteLimitReached ? "border-red-500 focus:ring-red-500/20" : "border-emerald-500 focus:ring-emerald-500/20"
+                )}
               />
+              <div className="flex items-center justify-between px-4">
+                <p className={cn("text-[10px] font-bold uppercase tracking-widest", isNoteLimitReached ? "text-red-500" : "text-emerald-600")}>
+                  {noteWordCount} / {NOTE_MAX_WORDS} words
+                </p>
+                {isNoteLimitReached && (
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-red-500">
+                    Word limit reached
+                  </p>
+                )}
+              </div>
+              {errors.notes && (
+                <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 ml-4">
+                  {errors.notes}
+                </p>
+              )}
             </div>
             <div className="flex gap-4">
               <Button 

@@ -7,6 +7,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 import { Input } from '../UI';
+import { countWords } from '../../lib/inputControl';
 
 interface ValidatedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -123,6 +124,7 @@ interface TextAreaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
   success?: boolean;
   required?: boolean;
   maxChars?: number;
+  maxWords?: number;
 }
 
 export const TextAreaField: React.FC<TextAreaFieldProps> = ({ 
@@ -131,11 +133,22 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   success, 
   required, 
   maxChars, 
+  maxWords,
   className, 
   value, 
+  onChange,
   ...props 
 }) => {
   const charCount = String(value || '').length;
+  const wordCount = countWords(String(value || ''));
+  const exceedsWordLimit = Boolean(maxWords && wordCount >= maxWords);
+
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (maxWords && countWords(e.target.value) > maxWords) {
+      return;
+    }
+    onChange?.(e);
+  };
   
   return (
     <div className="space-y-2 w-full">
@@ -149,15 +162,26 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
             {charCount} / {maxChars}
           </span>
         )}
+        {maxWords && (
+          <span className={cn(
+            "text-[9px] font-bold uppercase tracking-widest",
+            exceedsWordLimit ? "text-red-500" : "text-ink/20"
+          )}>
+            {wordCount} / {maxWords} words
+          </span>
+        )}
       </div>
       <textarea
         className={cn(
           'flex min-h-[120px] w-full rounded-[2rem] border border-black/5 bg-white px-6 py-4 text-sm placeholder:text-ink/20 focus:outline-none focus:ring-4 focus:ring-gold/10 disabled:cursor-not-allowed disabled:opacity-50 transition-all resize-none',
           error && 'border-red-500 focus:ring-red-500/20',
           success && !error && 'border-emerald-500 focus:ring-emerald-500/20',
+          maxWords && exceedsWordLimit && 'border-red-500 focus:ring-red-500/20',
+          maxWords && !exceedsWordLimit && !error && 'border-emerald-500 focus:ring-emerald-500/20',
           className
         )}
         value={value}
+        onChange={handleTextAreaChange}
         {...props}
       />
       <ValidationMessage message={error} />

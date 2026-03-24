@@ -16,6 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { sanitizeNic, sanitizePhoneNumber } from '../../lib/inputControl';
 
 interface ProfileFormProps {
   isEditing: boolean;
@@ -60,13 +61,23 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ isEditing, setIsEditin
       case 'nationalId':
         if (!value) error = 'National ID is required';
         else if (value.length < 10) error = 'National ID must be at least 10 characters';
+        else if (value.length > 12) error = 'National ID cannot exceed 12 characters';
         break;
     }
     return error;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    let { value } = e.target;
+
+    if (name === 'phoneNumber') {
+      value = sanitizePhoneNumber(value);
+    }
+    if (name === 'nationalId') {
+      value = sanitizeNic(value);
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
     if (touched[name]) {
       setErrors(prev => ({ ...prev, [name]: validate(name, value) }));
@@ -204,9 +215,11 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ isEditing, setIsEditin
             <InputField 
               label="Phone Number"
               name="phoneNumber"
+              type="text"
               icon={<Phone size={20} />}
               value={formData.phoneNumber || ''}
               onChange={handleChange}
+              maxLength={10}
               onBlur={() => handleBlur('phoneNumber')}
               error={touched.phoneNumber ? errors.phoneNumber : ''}
               success={touched.phoneNumber && !errors.phoneNumber}
@@ -240,9 +253,11 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ isEditing, setIsEditin
             <InputField 
               label="National ID"
               name="nationalId"
+              type="text"
               icon={<IdCard size={20} />}
               value={formData.nationalId || ''}
               onChange={handleChange}
+              maxLength={12}
               onBlur={() => handleBlur('nationalId')}
               error={touched.nationalId ? errors.nationalId : ''}
               success={touched.nationalId && !errors.nationalId}

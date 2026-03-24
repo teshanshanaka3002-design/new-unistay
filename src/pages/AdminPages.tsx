@@ -210,3 +210,73 @@ export const UsersManagement: React.FC = () => {
     </div>
   );
 };
+
+export const BoardingApprovals: React.FC = () => (
+  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900">Boarding Approvals</h1>
+      <p className="text-slate-500">Review and process boarding owner registration requests.</p>
+    </div>
+    <Card className="p-6 border-black/5">
+      <p className="text-sm text-slate-600">
+        Approval workflow is available here. Connect this page to backend data when ready.
+      </p>
+    </Card>
+  </div>
+);
+
+export const RestaurantApprovals: React.FC = () => (
+  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900">Restaurant Approvals</h1>
+      <p className="text-slate-500">Review and process restaurant owner registration requests.</p>
+    </div>
+    <Card className="p-6 border-black/5">
+      <p className="text-sm text-slate-600">
+        Approval workflow is available here. Connect this page to backend data when ready.
+      </p>
+    </Card>
+  </div>
+);
+
+export const PaymentsManagement: React.FC = () => (
+  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900">Payment Verification</h1>
+      <p className="text-slate-500">Verify and manage student and owner payment records.</p>
+    </div>
+    <Card className="p-6 border-black/5">
+      <p className="text-sm text-slate-600">
+        Payment verification list will appear here after API integration.
+      </p>
+    </Card>
+  </div>
+);
+
+export const ReviewsManagement: React.FC = () => (
+  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900">Reviews Management</h1>
+      <p className="text-slate-500">Moderate platform reviews and handle abuse reports.</p>
+    </div>
+    <Card className="p-6 border-black/5">
+      <p className="text-sm text-slate-600">
+        Review moderation tools will be available here.
+      </p>
+    </Card>
+  </div>
+);
+
+export const SystemStatistics: React.FC = () => (
+  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900">System Statistics</h1>
+      <p className="text-slate-500">Track platform growth, activity, and operational metrics.</p>
+    </div>
+    <Card className="p-6 border-black/5">
+      <p className="text-sm text-slate-600">
+        Detailed analytics widgets will be shown here.
+      </p>
+    </Card>
+  </div>
+);
