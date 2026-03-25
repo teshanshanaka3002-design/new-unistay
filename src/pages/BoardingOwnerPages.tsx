@@ -120,12 +120,15 @@ export const AddListingForm: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name) newErrors.name = 'Boarding Name is required';
     if (!formData.location) newErrors.location = 'Location is required';
-    if (!formData.price || isNaN(Number(formData.price))) newErrors.price = 'Valid price is required';
+    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) < 5000) {
+      newErrors.price = 'Valid price is required (minimum $5,000)';
+    }
     if (!formData.roomType) newErrors.roomType = 'Room Type is required';
     if (formData.description.length < 10) newErrors.description = 'Description must be at least 10 characters';
     
@@ -141,7 +144,25 @@ export const AddListingForm: React.FC = () => {
     // Mock API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsSubmitting(false);
-    alert('Listing created successfully!');
+    
+    // Show success banner
+    setShowSuccessBanner(true);
+    
+    // Reset form
+    setFormData({
+      name: '',
+      location: '',
+      price: '',
+      roomType: '',
+      description: '',
+      facilities: [] as string[]
+    });
+    setPreviewImage(null);
+    
+    // Hide banner after 5 seconds
+    setTimeout(() => {
+      setShowSuccessBanner(false);
+    }, 5000);
   };
 
   const toggleFacility = (facility: string) => {
@@ -171,41 +192,108 @@ export const AddListingForm: React.FC = () => {
         <p className="text-ink/40 font-medium">Create a compelling listing to attract the best students.</p>
       </div>
 
+      {/* Success Banner */}
+      {showSuccessBanner && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex items-center gap-4"
+        >
+          <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-emerald-800">Listing Published Successfully!</h3>
+            <p className="text-emerald-600">Your accommodation listing has been published and is now visible to students.</p>
+          </div>
+          <button
+            onClick={() => setShowSuccessBanner(false)}
+            className="text-emerald-400 hover:text-emerald-600 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </motion.div>
+      )}
+
       <Card className="p-12 border-black/5 shadow-2xl shadow-ink/5">
         <form onSubmit={handleSubmit} className="space-y-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
               <Input 
                 label="Boarding Name" 
-                placeholder="e.g. Royal Student Suites" 
+                placeholder="e.g. RoyalStudentSuites" 
                 value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                onChange={e => {
+                  // Only allow letters and numbers, no special characters or spaces
+                  const cleanedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                  setFormData({ ...formData, name: cleanedValue });
+                }}
                 className={errors.name ? 'border-red-500' : ''}
               />
               {errors.name && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.name}</p>}
+              <p className="text-[10px] text-ink/40 ml-4">Only letters and numbers allowed (no spaces or special characters)</p>
             </div>
 
             <div className="space-y-2">
               <Input 
                 label="Location" 
-                placeholder="e.g. 123 University Ave, Colombo" 
+                placeholder="e.g. 123UniversityAveColombo" 
                 value={formData.location}
-                onChange={e => setFormData({ ...formData, location: e.target.value })}
+                onChange={e => {
+                  // Only allow letters and numbers, no special characters or spaces
+                  const cleanedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                  setFormData({ ...formData, location: cleanedValue });
+                }}
                 className={errors.location ? 'border-red-500' : ''}
               />
               {errors.location && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.location}</p>}
+              <p className="text-[10px] text-ink/40 ml-4">Only letters and numbers allowed (no spaces or special characters)</p>
             </div>
 
             <div className="space-y-2">
               <Input 
                 label="Price per month ($)" 
                 type="number" 
-                placeholder="250" 
+                placeholder="5000" 
                 value={formData.price}
-                onChange={e => setFormData({ ...formData, price: e.target.value })}
-                className={errors.price ? 'border-red-500' : ''}
+                onChange={e => {
+                  // Only allow numbers, no letters or special characters
+                  let numericValue = e.target.value.replace(/[^0-9]/g, '');
+                  
+                  // Allow empty input for typing, but enforce minimum on blur or submission
+                  if (numericValue === '') {
+                    setFormData({ ...formData, price: '' });
+                  } else {
+                    // Convert to number and enforce minimum
+                    const numValue = parseInt(numericValue);
+                    if (numValue < 5000) {
+                      // Allow typing but show visual feedback that it's below minimum
+                      setFormData({ ...formData, price: numericValue });
+                    } else {
+                      setFormData({ ...formData, price: numericValue });
+                    }
+                  }
+                }}
+                onBlur={e => {
+                  // Enforce minimum when user leaves the field
+                  const currentValue = e.target.value.replace(/[^0-9]/g, '');
+                  if (currentValue && parseInt(currentValue) < 5000) {
+                    setFormData({ ...formData, price: '5000' });
+                  }
+                }}
+                className={errors.price ? 'border-red-500' : (formData.price && parseInt(formData.price) < 5000) ? 'border-amber-500' : ''}
+                min="5000"
               />
               {errors.price && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.price}</p>}
+              {formData.price && parseInt(formData.price) < 5000 && (
+                <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest ml-4">Price must be at least $5,000</p>
+              )}
+              <p className="text-[10px] text-ink/40 ml-4">Minimum price is $5,000 per month (numbers only)</p>
             </div>
 
             <div className="space-y-2">
@@ -796,10 +884,15 @@ export const OwnerProfilePage: React.FC = () => {
                     label="Primary Boarding Name" 
                     value={formData.boardingName}
                     disabled={!isEditing}
-                    onChange={e => setFormData({ ...formData, boardingName: e.target.value })}
+                    onChange={e => {
+                      // Only allow letters and numbers, no special characters or spaces
+                      const cleanedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                      setFormData({ ...formData, boardingName: cleanedValue });
+                    }}
                     className={errors.boardingName ? 'border-red-500' : ''}
                   />
                   {errors.boardingName && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.boardingName}</p>}
+                  {isEditing && <p className="text-[10px] text-ink/40 ml-4">Only letters and numbers allowed (no spaces or special characters)</p>}
                 </div>
               </div>
 
