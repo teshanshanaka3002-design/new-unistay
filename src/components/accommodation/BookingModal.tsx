@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Star, MapPin, ShieldCheck, Check, 
   Upload, Calendar, Info, X, CreditCard,
-  ChevronRight, AlertCircle, ArrowLeft
+  ChevronRight, AlertCircle, ArrowLeft, CheckCircle
 } from 'lucide-react';
 import { Card, Button, Input, Modal, Badge } from '../UI';
 import { Accommodation, BookingRequest } from '../../types/accommodation';
@@ -18,14 +18,21 @@ interface BookingModalProps {
   onSubmit: (request: BookingRequest) => void;
 }
 
-export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, accommodation, onSubmit }) => {
-  const [roomType, setRoomType] = useState(accommodation.roomType);
-  const [duration, setDuration] = useState(6);
-  const [paymentProof, setPaymentProof] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export const BookingModal: React.FC<BookingModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  accommodation, 
+  onSubmit 
+}) => {
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [bookingId, setBookingId] = useState('');
+  const [paymentProof, setPaymentProof] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ nationalId?: string; notes?: string }>({});
 
+  const [roomType, setRoomType] = useState(accommodation.roomType);
+  const [duration, setDuration] = useState(6);
   // Form State
   const [formData, setFormData] = useState({
     fullName: '',
@@ -139,8 +146,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
     if (!paymentProof) return;
     
     setIsSubmitting(true);
-    // Simulate API call
+    // Simulate API call for payment proof upload
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Generate a booking ID
+    const generatedBookingId = 'BK' + Date.now().toString().slice(-8);
+    setBookingId(generatedBookingId);
     
     onSubmit({
       ...formData,
@@ -152,7 +163,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
     });
     
     setIsSubmitting(false);
-    onClose();
+    
+    // Move to confirmation step instead of showing success immediately
+    setStep(3);
+  };
+
+  const handleConfirmBooking = () => {
+    setShowSuccess(true);
   };
 
   const isStep1Valid = Boolean(
@@ -185,23 +202,28 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
         {/* Custom Header */}
         <div className="flex items-center justify-between border-b border-black/5 pb-8">
           <div className="flex items-center gap-6">
-            <button 
-              onClick={onClose}
-              className="w-12 h-12 rounded-full border border-black/5 flex items-center justify-center text-ink/40 hover:text-ink hover:bg-paper transition-all group"
-            >
-              <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-            </button>
+            {!showSuccess && (
+              <button 
+                onClick={step === 3 ? () => setStep(2) : onClose}
+                className="w-12 h-12 rounded-full border border-black/5 flex items-center justify-center text-ink/40 hover:text-ink hover:bg-paper transition-all group"
+              >
+                <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+              </button>
+            )}
             <div className="space-y-1">
               <h2 className="text-3xl font-serif text-ink">
-                {step === 1 ? 'Student Information' : 'Payment & Confirmation'}
+                {showSuccess ? 'Booking Confirmed!' : 
+                 (step === 1 ? 'Student Information' : 
+                  step === 2 ? 'Payment & Confirmation' : 'Booking Confirmed')}
               </h2>
               <p className="text-[10px] text-ink/40 font-bold uppercase tracking-widest">
-                Step {step} of 2
+                {showSuccess ? 'Success' : 
+                 (step === 3 ? 'Confirmation' : `Step ${step} of 2`)}
               </p>
             </div>
           </div>
           <button 
-            onClick={onClose}
+            onClick={showSuccess ? onClose : onClose}
             className="w-12 h-12 rounded-full hover:bg-black/5 flex items-center justify-center transition-colors text-ink/40 hover:text-ink"
           >
             <X size={24} />
@@ -500,6 +522,128 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, acc
               </Button>
             </div>
           </div>
+        )}
+        
+        {/* Confirmation Step (Step 3) */}
+        {step === 3 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center space-y-8 py-12"
+          >
+            <div className="flex justify-center">
+              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
+                <CheckCircle size={40} className="text-emerald-600" />
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-4xl font-serif text-ink">
+                Pending for Review
+              </h3>
+              <div className="space-y-2">
+                <p className="text-lg text-ink/60 leading-relaxed max-w-md mx-auto">
+                  We will reserve your place, and the owner will contact you soon.
+                </p>
+                <div className="inline-flex items-center gap-2 bg-gold/10 px-4 py-2 rounded-full">
+                  <span className="text-sm font-bold text-gold uppercase tracking-widest">Booking ID:</span>
+                  <span className="font-mono font-bold text-ink">{bookingId}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-paper/50 rounded-2xl p-6 space-y-4">
+                <h4 className="font-bold text-ink">Booking Details</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="text-left">
+                    <p className="text-ink/40">Property</p>
+                    <p className="font-semibold">{accommodation.name}</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-ink/40">Duration</p>
+                    <p className="font-semibold">{duration} months</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-ink/40">Total Amount</p>
+                    <p className="font-semibold text-gold">Rs. {grandTotal.toLocaleString()}</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-ink/40">Status</p>
+                    <p className="font-semibold text-emerald-600">Pending Confirmation</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-4 justify-center">
+                <Button 
+                  className="h-12 px-8 rounded-full bg-gold text-white hover:bg-ink font-bold uppercase tracking-widest text-[9px]"
+                  onClick={handleConfirmBooking}
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        
+        {/* Success UI */}
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center space-y-8 py-12"
+          >
+            <div className="flex justify-center">
+              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
+                <CheckCircle size={40} className="text-emerald-600" />
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-4xl font-serif text-ink">
+                Booking Confirmed!
+              </h3>
+              <p className="text-lg text-ink/60 leading-relaxed max-w-md mx-auto">
+                We will reserve your place, and the owner will contact you soon.
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-paper/50 rounded-2xl p-6 space-y-4">
+                <h4 className="font-bold text-ink">Booking Details</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="text-left">
+                    <p className="text-ink/40">Property</p>
+                    <p className="font-semibold">{accommodation.name}</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-ink/40">Duration</p>
+                    <p className="font-semibold">{duration} months</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-ink/40">Total Amount</p>
+                    <p className="font-semibold text-gold">Rs. {grandTotal.toLocaleString()}</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-ink/40">Status</p>
+                    <p className="font-semibold text-emerald-600">Pending Confirmation</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-4 justify-center">
+                <Button 
+                  className="h-12 px-8 rounded-full bg-gold text-white hover:bg-ink font-bold uppercase tracking-widest text-[9px]"
+                  onClick={onClose}
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         )}
       </div>
     </Modal>

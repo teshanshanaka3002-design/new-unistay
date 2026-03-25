@@ -55,6 +55,7 @@ import {
 
 import { MapSection } from '../components/MapSection';
 import { RequestSystem } from '../components/requests/RequestSystem';
+import Chatbot from '../components/Chatbot';
 
 // --- Student Dashboard ---
 export const StudentDashboard: React.FC = () => {
@@ -382,6 +383,9 @@ export const StudentDashboard: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Chatbot Component */}
+      <Chatbot />
     </div>
   );
 };
@@ -464,13 +468,158 @@ export const FindAccommodation: React.FC = () => {
     try {
       setLoading(true);
       const res = await axios.get('/api/accommodations');
-      const mapped = (Array.isArray(res.data) ? res.data : []).map((item: any) => ({
+      const mapped = (Array.isArray(res.data) ? res.data : []).map((item: any, index: number) => ({
         ...item,
         id: item._id || item.id || `acc-${Math.random()}`
       }));
-      setListings(mapped);
+      
+      // Custom images for SLIIT Green Residence
+      const customImages = [
+        'https://www.ecu.edu.lk/wp-content/uploads/accommodation-430x286-1.jpg',
+        'https://static.sliit.lk/wp-content/uploads/2018/03/Student-Accomodation-2.jpg',
+        'https://housinganywhere.imgix.net/room/1413910/beb7b3f6-efed-11e8-a6c4-42010af00007.jpg',
+        'https://www.ecu.edu.lk/wp-content/uploads/accommodation-430x286-1.jpg'
+      ];
+      
+      // If API returns empty data, use mock data with provided images
+      if (mapped.length === 0) {
+        const mockData = [
+          {
+            id: 'acc-1',
+            name: 'SLIIT Green Residence - Block A',
+            image: customImages[0],
+            price: 25000,
+            location: 'Malabe',
+            city: 'Malabe',
+            university: 'SLIIT',
+            roomType: 'Single Room',
+            propertyType: 'Boarding House',
+            rating: 4.5,
+            facilities: ['WiFi', 'Laundry', 'Meals', 'Security'],
+            genderPreference: 'Mixed',
+            description: 'Modern student accommodation with premium facilities'
+          },
+          {
+            id: 'acc-2',
+            name: 'SLIIT Green Residence - Block B',
+            image: customImages[1],
+            price: 22000,
+            location: 'Malabe',
+            city: 'Malabe',
+            university: 'SLIIT',
+            roomType: 'Shared Room',
+            propertyType: 'Boarding House',
+            rating: 4.3,
+            facilities: ['WiFi', 'Laundry', 'Study Area', 'Security'],
+            genderPreference: 'Mixed',
+            description: 'Comfortable shared rooms with study facilities'
+          },
+          {
+            id: 'acc-3',
+            name: 'SLIIT Green Residence - Block C',
+            image: customImages[2],
+            price: 28000,
+            location: 'Malabe',
+            city: 'Malabe',
+            university: 'SLIIT',
+            roomType: 'Single Room',
+            propertyType: 'Boarding House',
+            rating: 4.7,
+            facilities: ['WiFi', 'Laundry', 'Meals', 'Gym', 'Security'],
+            genderPreference: 'Mixed',
+            description: 'Premium accommodation with additional fitness facilities'
+          },
+          {
+            id: 'acc-4',
+            name: 'SLIIT Green Residence - Block D',
+            image: customImages[3],
+            price: 20000,
+            location: 'Malabe',
+            city: 'Malabe',
+            university: 'SLIIT',
+            roomType: 'Shared Room',
+            propertyType: 'Boarding House',
+            rating: 4.2,
+            facilities: ['WiFi', 'Laundry', 'Kitchen', 'Security'],
+            genderPreference: 'Mixed',
+            description: 'Budget-friendly accommodation with basic amenities'
+          }
+        ];
+        setListings(mockData);
+      } else {
+        // Override images for existing API data with custom images
+        const updatedListings = mapped.map((item, index) => ({
+          ...item,
+          image: customImages[index % customImages.length]
+        }));
+        setListings(updatedListings);
+      }
     } catch (err) {
       console.error('Failed to fetch listings', err);
+      // Fallback to mock data on error
+      const mockData = [
+        {
+          id: 'acc-1',
+          name: 'SLIIT Green Residence - Block A',
+          image: 'https://www.ecu.edu.lk/wp-content/uploads/accommodation-430x286-1.jpg',
+          price: 25000,
+          location: 'Malabe',
+          city: 'Malabe',
+          university: 'SLIIT',
+          roomType: 'Single Room',
+          propertyType: 'Boarding House',
+          rating: 4.5,
+          facilities: ['WiFi', 'Laundry', 'Meals', 'Security'],
+          genderPreference: 'Mixed',
+          description: 'Modern student accommodation with premium facilities'
+        },
+        {
+          id: 'acc-2',
+          name: 'SLIIT Green Residence - Block B',
+          image: 'https://static.sliit.lk/wp-content/uploads/2018/03/Student-Accomodation-2.jpg',
+          price: 22000,
+          location: 'Malabe',
+          city: 'Malabe',
+          university: 'SLIIT',
+          roomType: 'Shared Room',
+          propertyType: 'Boarding House',
+          rating: 4.3,
+          facilities: ['WiFi', 'Laundry', 'Study Area', 'Security'],
+          genderPreference: 'Mixed',
+          description: 'Comfortable shared rooms with study facilities'
+        },
+        {
+          id: 'acc-3',
+          name: 'SLIIT Green Residence - Block C',
+          image: 'https://housinganywhere.imgix.net/room/1413910/beb7b3f6-efed-11e8-a6c4-42010af00007.jpg',
+          price: 28000,
+          location: 'Malabe',
+          city: 'Malabe',
+          university: 'SLIIT',
+          roomType: 'Single Room',
+          propertyType: 'Boarding House',
+          rating: 4.7,
+          facilities: ['WiFi', 'Laundry', 'Meals', 'Gym', 'Security'],
+          genderPreference: 'Mixed',
+          description: 'Premium accommodation with additional fitness facilities'
+        },
+        {
+          id: 'acc-4',
+          name: 'SLIIT Green Residence - Block D',
+          image: 'https://www.ecu.edu.lk/wp-content/uploads/accommodation-430x286-1.jpg',
+          price: 20000,
+          location: 'Malabe',
+          city: 'Malabe',
+          university: 'SLIIT',
+          roomType: 'Shared Room',
+          propertyType: 'Boarding House',
+          rating: 4.2,
+          facilities: ['WiFi', 'Laundry', 'Kitchen', 'Security'],
+          genderPreference: 'Mixed',
+          description: 'Budget-friendly accommodation with basic amenities'
+        }
+      ];
+      setListings(mockData);
     } finally {
       setLoading(false);
     }
