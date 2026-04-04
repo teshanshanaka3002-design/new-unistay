@@ -10,23 +10,23 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-import { 
-  Search, 
-  MapPin, 
+import {
+  Search,
+  MapPin,
   Home,
   Utensils,
   Zap,
   Eye,
   Heart,
-  Star, 
+  Star,
   StarHalf,
-  ShoppingBag, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Plus, 
-  Minus, 
-  Trash2, 
+  ShoppingBag,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  Minus,
+  Trash2,
   Upload,
   Filter,
   ArrowRight,
@@ -61,7 +61,7 @@ import Chatbot from '../components/Chatbot';
 export const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
-  
+
   const slides = [
     {
       image: "https://static.sliit.lk/wp-content/uploads/2024/09/13103301/SLIIT-Convocation-2024-September-6.jpeg",
@@ -109,9 +109,9 @@ export const StudentDashboard: React.FC = () => {
             transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
             className="absolute inset-0"
           >
-            <img 
-              src={slides[index].image} 
-              alt="Hero" 
+            <img
+              src={slides[index].image}
+              alt="Hero"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
@@ -131,25 +131,25 @@ export const StudentDashboard: React.FC = () => {
               <div className="w-1 h-1 rounded-full bg-gold" />
               The Campus OS 2.0
             </div>
-            
+
             <h1 className="text-6xl md:text-[8rem] font-serif leading-[0.85] text-white tracking-tight">
               {slides[index].title} <br />
               <span className="italic text-gold">{slides[index].subtitle}</span>
             </h1>
-            
+
             <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto leading-relaxed font-medium">
               {slides[index].desc}
             </p>
-            
+
             <div className="flex flex-wrap items-center justify-center gap-4 pt-8">
-              <button 
+              <button
                 onClick={() => navigate('/student/find-accommodation')}
                 className="bg-white text-ink px-10 py-5 rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all duration-500 shadow-2xl flex items-center gap-3"
               >
                 <Search size={18} />
                 Find Housing
               </button>
-              <button 
+              <button
                 onClick={() => navigate('/student/find-restaurants')}
                 className="bg-transparent text-white border border-white/30 px-10 py-5 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-white/10 transition-all duration-500 backdrop-blur-sm"
               >
@@ -184,14 +184,14 @@ export const StudentDashboard: React.FC = () => {
             transition={{ duration: 1 }}
             className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl"
           >
-            <img 
-              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=2070" 
-              alt="Student Life" 
+            <img
+              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=2070"
+              alt="Student Life"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -345,7 +345,7 @@ export const StudentDashboard: React.FC = () => {
                 <span className="italic text-gold">available.</span>
               </h2>
             </div>
-            
+
             <div className="flex flex-wrap gap-4">
               <button className="flex items-center gap-3 px-8 py-4 rounded-full border border-emerald-500/20 bg-emerald-50 text-emerald-600 font-bold text-xs uppercase tracking-widest hover:bg-emerald-100 transition-all duration-300">
                 <MessageCircle size={18} />
@@ -359,25 +359,25 @@ export const StudentDashboard: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <FAQItem 
-              question="What types of accommodation are available for students" 
+            <FAQItem
+              question="What types of accommodation are available for students"
               answer="At StudentNest, students can choose from a variety of accommodation options. These include studio rooms, ensuites, shared apartments and private apartments."
               defaultOpen={true}
             />
-            <FAQItem 
-              question="How to book student accommodation with StudentNest?" 
+            <FAQItem
+              question="How to book student accommodation with StudentNest?"
               answer="Booking is simple. Browse our verified listings, select your preferred stay, and click 'Book Now'. Our team will guide you through the verification and payment process."
             />
-            <FAQItem 
-              question="Is there any deposit or booking fee?" 
+            <FAQItem
+              question="Is there any deposit or booking fee?"
               answer="Yes, a standard security deposit is usually required by property owners. StudentNest itself does not charge hidden booking fees for students."
             />
-            <FAQItem 
-              question="Are the rooms and apartments provided by StudentNest verified?" 
+            <FAQItem
+              question="Are the rooms and apartments provided by StudentNest verified?"
               answer="Absolutely. Every property listed on StudentNest undergoes a rigorous manual inspection process to ensure it meets our standards for safety, cleanliness, and comfort."
             />
-            <FAQItem 
-              question="Does StudentNest Offer Group Bookings?" 
+            <FAQItem
+              question="Does StudentNest Offer Group Bookings?"
               answer="Yes, we support group bookings. If you and your friends want to stay together, simply reach out to our support team or mention it in your booking request."
             />
           </div>
@@ -395,7 +395,7 @@ const FAQItem: React.FC<{ question: string; answer: string; defaultOpen?: boolea
 
   return (
     <div className="border-b border-black/5 py-6">
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between py-4 text-left group"
       >
@@ -450,6 +450,7 @@ export const FindAccommodation: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
+  const [searchQuery, setSearchQuery] = useState('');
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
   const [selectedListing, setSelectedListing] = useState<any>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -464,20 +465,20 @@ export const FindAccommodation: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [filters, listings]);
+  }, [filters, listings, searchQuery]);
 
   const fetchListings = async () => {
     try {
       setLoading(true);
       const res = await accommodationService.getAll({});
-      
+
       const realData = res.data.value ? res.data.value : (Array.isArray(res.data) ? res.data : []);
       const mapped = realData.map((item: any, index: number) => ({
         ...item,
         image: (item.images && item.images.length > 0) ? item.images[0] : item.image,
         id: item._id || item.id || `acc-${Math.random()}`
       }));
-      
+
       // Custom images for SLIIT Green Residence
       const customImages = [
         'https://www.ecu.edu.lk/wp-content/uploads/accommodation-430x286-1.jpg',
@@ -485,7 +486,7 @@ export const FindAccommodation: React.FC = () => {
         'https://housinganywhere.imgix.net/room/1413910/beb7b3f6-efed-11e8-a6c4-42010af00007.jpg',
         'https://www.ecu.edu.lk/wp-content/uploads/accommodation-430x286-1.jpg'
       ];
-      
+
       // If API returns empty data, use mock data with provided images
       if (mapped.length === 0) {
         const mockData = [
@@ -628,11 +629,22 @@ export const FindAccommodation: React.FC = () => {
   const applyFilters = () => {
     let result = [...listings];
 
+    // Search Query Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(l => 
+        (l.name && l.name.toLowerCase().includes(q)) || 
+        (l.city && l.city.toLowerCase().includes(q)) || 
+        (l.location && l.location.toLowerCase().includes(q)) || 
+        (l.university && l.university.toLowerCase().includes(q))
+      );
+    }
+
     // City Filter
     if (filters.city) {
-      result = result.filter(l => 
-        l.city?.toLowerCase().includes(filters.city.toLowerCase()) ||
-        l.location?.toLowerCase().includes(filters.city.toLowerCase())
+      result = result.filter(l =>
+        (l.city && l.city.toLowerCase().includes(filters.city.toLowerCase())) ||
+        (l.location && l.location.toLowerCase().includes(filters.city.toLowerCase()))
       );
     }
 
@@ -656,7 +668,7 @@ export const FindAccommodation: React.FC = () => {
 
     // Facilities Filter
     if (filters.facilities.length > 0) {
-      result = result.filter(l => 
+      result = result.filter(l =>
         filters.facilities.every(f => l.facilities?.includes(f))
       );
     }
@@ -695,11 +707,11 @@ export const FindAccommodation: React.FC = () => {
         accommodationId: selectedListing._id || selectedListing.id,
         studentId: user.id, // Live authenticated user ID
       };
-      
+
       if (!payload.moveInDate) {
         delete payload.moveInDate;
       }
-      
+
       await bookingService.create(payload);
       setIsBookingModalOpen(false);
       alert('Booking request sent successfully!');
@@ -713,7 +725,7 @@ export const FindAccommodation: React.FC = () => {
     return (
       <div className="min-h-screen bg-paper pb-20">
         <div className="max-w-7xl mx-auto px-6 pt-12">
-          <AccommodationDetails 
+          <AccommodationDetails
             accommodation={selectedListing}
             onBack={() => setSelectedListing(null)}
             onBook={() => setIsBookingModalOpen(true)}
@@ -722,7 +734,7 @@ export const FindAccommodation: React.FC = () => {
         </div>
 
         {isBookingModalOpen && (
-          <BookingModal 
+          <BookingModal
             isOpen={isBookingModalOpen}
             onClose={() => setIsBookingModalOpen(false)}
             accommodation={selectedListing}
@@ -731,7 +743,7 @@ export const FindAccommodation: React.FC = () => {
         )}
 
         {isContactModalOpen && (
-          <ContactModal 
+          <ContactModal
             isOpen={isContactModalOpen}
             onClose={() => setIsContactModalOpen(false)}
             accommodation={selectedListing}
@@ -747,17 +759,29 @@ export const FindAccommodation: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Sidebar */}
           <aside className="w-full lg:w-96 shrink-0">
-            <FilterSidebar 
+            <FilterSidebar
               filters={filters}
               setFilters={setFilters}
               onClear={() => setFilters(INITIAL_FILTERS)}
-              onApply={() => {}} // Filters apply automatically via useEffect
+              onApply={() => { }} // Filters apply automatically via useEffect
             />
           </aside>
 
           {/* Main Content */}
           <div className="flex-1 space-y-10">
-            <TopFilterBar 
+            <div className="flex items-center">
+              <div className="relative w-full shadow-lg shadow-black/5 rounded-full overflow-hidden border border-black/5">
+                <input 
+                  type="text" 
+                  placeholder="Search by name, city, or university..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full h-16 px-8 text-ink text-sm font-medium focus:ring-0 focus:outline-none placeholder:text-ink/30 placeholder:uppercase placeholder:font-bold placeholder:tracking-widest"
+                />
+              </div>
+            </div>
+
+            <TopFilterBar
               filters={filters}
               setFilters={setFilters}
               resultsCount={filteredListings.length}
@@ -774,16 +798,16 @@ export const FindAccommodation: React.FC = () => {
                 </div>
               ) : filteredListings.length > 0 ? (
                 filteredListings.map((listing) => (
-                  <AccommodationCard 
-                    key={listing.id} 
-                    accommodation={listing} 
-                    onClick={() => setSelectedListing(listing)} 
+                  <AccommodationCard
+                    key={listing.id}
+                    accommodation={listing}
+                    onClick={() => setSelectedListing(listing)}
                   />
                 ))
               ) : (
                 <div className="col-span-full text-center py-20 bg-white rounded-[3rem] border border-black/5">
                   <p className="text-ink/30 font-serif text-2xl italic">No stays found matching your search.</p>
-                  <button 
+                  <button
                     onClick={() => setFilters(INITIAL_FILTERS)}
                     className="mt-4 text-gold font-bold uppercase tracking-widest text-xs hover:underline"
                   >
@@ -839,7 +863,7 @@ export const MyBookings: React.FC = () => {
   return (
     <div className="space-y-16 pb-32">
       <div className="space-y-6">
-        <button 
+        <button
           onClick={() => navigate('/student/find-accommodation')}
           className="flex items-center gap-3 px-6 py-3 bg-white border border-black/5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-ink/60 hover:text-ink hover:bg-gold/10 transition-all shadow-sm group w-fit"
         >
@@ -854,7 +878,7 @@ export const MyBookings: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-12">
         {[1, 2].map((_, i) => (
-          <motion.div 
+          <motion.div
             key={`booking-${i}`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -863,10 +887,10 @@ export const MyBookings: React.FC = () => {
           >
             <div className="flex flex-col lg:flex-row">
               <div className="lg:w-1/3 h-80 lg:h-auto overflow-hidden relative">
-                <img 
-                  src={`https://picsum.photos/seed/room${i}/800/800`} 
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                  referrerPolicy="no-referrer" 
+                <img
+                  src={`https://picsum.photos/seed/room${i}/800/800`}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                  referrerPolicy="no-referrer"
                 />
                 <div className="absolute top-8 left-8">
                   <div className={cn(
@@ -877,7 +901,7 @@ export const MyBookings: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex-1 p-12 lg:p-16 space-y-10">
                 <div className="flex justify-between items-start">
                   <div className="space-y-2">
@@ -911,7 +935,7 @@ export const MyBookings: React.FC = () => {
                     View Details
                   </button>
                   {i !== 0 && (
-                    <button 
+                    <button
                       onClick={() => { setSelectedBooking(i); setIsUploadModalOpen(true); }}
                       className="px-8 py-4 bg-ink text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-300"
                     >
@@ -928,14 +952,14 @@ export const MyBookings: React.FC = () => {
       <AnimatePresence>
         {isUploadModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => { setIsUploadModalOpen(false); setPreviewImage(null); }}
               className="absolute inset-0 bg-ink/60 backdrop-blur-xl"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -945,13 +969,13 @@ export const MyBookings: React.FC = () => {
                 <h2 className="text-4xl font-serif text-ink">Upload Payment Proof</h2>
                 <p className="text-sm text-ink/40">Please provide a clear image of your bank transfer receipt for verification.</p>
               </div>
-              
+
               <div className="relative aspect-video rounded-[2rem] border-2 border-dashed border-ink/10 bg-white flex flex-col items-center justify-center overflow-hidden group transition-colors hover:border-gold/30">
                 {previewImage ? (
                   <>
                     <img src={previewImage} className="w-full h-full object-contain" />
                     <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button 
+                      <button
                         onClick={() => setPreviewImage(null)}
                         className="px-6 py-3 bg-white text-ink rounded-full text-[10px] font-bold uppercase tracking-widest"
                       >
@@ -964,9 +988,9 @@ export const MyBookings: React.FC = () => {
                     <Upload size={40} className="text-ink/10 mb-4" />
                     <p className="text-[10px] font-bold uppercase tracking-widest text-ink/40">Click to select or drag and drop</p>
                     <p className="text-[9px] font-bold uppercase tracking-widest text-ink/20 mt-2">PNG, JPG up to 5MB</p>
-                    <input 
-                      type="file" 
-                      className="absolute inset-0 opacity-0 cursor-pointer" 
+                    <input
+                      type="file"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                       accept="image/*"
                       onChange={handleImageChange}
                     />
@@ -975,13 +999,13 @@ export const MyBookings: React.FC = () => {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <button 
+                <button
                   onClick={() => { setIsUploadModalOpen(false); setPreviewImage(null); }}
                   className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-ink transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   disabled={!previewImage}
                   onClick={() => setIsUploadModalOpen(false)}
                   className="flex-1 py-5 bg-ink text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gold disabled:opacity-20 disabled:hover:bg-ink transition-all duration-300"
@@ -1008,7 +1032,7 @@ export const StudentRequests: React.FC = () => {
   if (view === 'new') {
     return (
       <div className="space-y-12 pb-32">
-        <button 
+        <button
           onClick={() => setView('list')}
           className="flex items-center gap-3 px-6 py-3 bg-white border border-black/5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-ink/60 hover:text-ink hover:bg-gold/10 transition-all shadow-sm group w-fit"
         >
@@ -1027,18 +1051,18 @@ export const StudentRequests: React.FC = () => {
           <h1 className="text-6xl font-serif text-ink">My Requests</h1>
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-ink/30">Support and maintenance tracking</p>
         </div>
-        <button 
+        <button
           onClick={() => setView('new')}
           className="px-10 py-5 bg-ink text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-300 flex items-center gap-3 shadow-xl shadow-ink/10"
         >
-          <Plus size={18} /> 
+          <Plus size={18} />
           New Request
         </button>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
         {requests.map((req) => (
-          <motion.div 
+          <motion.div
             key={`req-${req.id}`}
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -1144,7 +1168,7 @@ export const CanteenOwnerDashboard: React.FC = () => {
             <p className="text-[9px] font-bold uppercase tracking-widest text-ink/30">Active Orders</p>
             <p className="text-xl font-serif text-ink">{orders.filter(o => o.status !== 'Collected').length}</p>
           </div>
-          <button 
+          <button
             onClick={fetchOrders}
             className="w-14 h-14 bg-white border border-black/5 rounded-full flex items-center justify-center text-ink/40 hover:text-ink transition-colors"
           >
@@ -1155,7 +1179,7 @@ export const CanteenOwnerDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-8">
         {orders.map((order) => (
-          <motion.div 
+          <motion.div
             key={`order-${order.id}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1167,9 +1191,9 @@ export const CanteenOwnerDashboard: React.FC = () => {
                   <h3 className="text-3xl font-serif text-ink">Order #{order.id}</h3>
                   <span className={cn(
                     "px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border",
-                    order.status === 'Pending' ? "bg-amber-50 text-amber-600 border-amber-100" : 
-                    order.status === 'Preparing' ? "bg-blue-50 text-blue-600 border-blue-100" :
-                    "bg-emerald-50 text-emerald-600 border-emerald-100"
+                    order.status === 'Pending' ? "bg-amber-50 text-amber-600 border-amber-100" :
+                      order.status === 'Preparing' ? "bg-blue-50 text-blue-600 border-blue-100" :
+                        "bg-emerald-50 text-emerald-600 border-emerald-100"
                   )}>
                     {order.status}
                   </span>
@@ -1198,7 +1222,7 @@ export const CanteenOwnerDashboard: React.FC = () => {
 
             <div className="flex justify-end gap-4">
               {order.status === 'Pending' && (
-                <button 
+                <button
                   onClick={() => updateStatus(order.id, 'Preparing')}
                   className="px-8 py-4 bg-blue-600 text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all"
                 >
@@ -1206,7 +1230,7 @@ export const CanteenOwnerDashboard: React.FC = () => {
                 </button>
               )}
               {order.status === 'Preparing' && (
-                <button 
+                <button
                   onClick={() => updateStatus(order.id, 'Ready')}
                   className="px-8 py-4 bg-emerald-600 text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all"
                 >
@@ -1214,7 +1238,7 @@ export const CanteenOwnerDashboard: React.FC = () => {
                 </button>
               )}
               {order.status === 'Ready' && (
-                <button 
+                <button
                   onClick={() => updateStatus(order.id, 'Collected')}
                   className="px-8 py-4 bg-ink text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all"
                 >
@@ -1317,7 +1341,7 @@ export const AllReviewsPage: React.FC = () => {
     if (formData.rating < 1 || formData.rating > 5) newErrors.rating = "Rating must be between 1 and 5";
     if (!formData.comment || formData.comment.length < 10) newErrors.comment = "Comment must be at least 10 characters";
     if (formData.comment.length > 300) newErrors.comment = "Comment must be less than 300 characters";
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -1329,7 +1353,7 @@ export const AllReviewsPage: React.FC = () => {
     setLoading(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     const newReview = {
       id: Date.now(),
       name: formData.fullName,
@@ -1410,8 +1434,8 @@ export const AllReviewsPage: React.FC = () => {
             onClick={() => setIsModalOpen(true)}
             className={cn(
               "px-10 py-5 rounded-full font-bold text-sm uppercase tracking-widest transition-all duration-500 shadow-2xl flex items-center gap-3",
-              isEligible 
-                ? "bg-ink text-white hover:bg-gold hover:scale-105" 
+              isEligible
+                ? "bg-ink text-white hover:bg-gold hover:scale-105"
                 : "bg-ink/5 text-ink/20 cursor-not-allowed"
             )}
           >
@@ -1436,7 +1460,7 @@ export const AllReviewsPage: React.FC = () => {
                 Verified Student
               </div>
             )}
-            
+
             <div className="flex gap-1">
               {renderStars(review.rating)}
             </div>
@@ -1464,8 +1488,8 @@ export const AllReviewsPage: React.FC = () => {
       </div>
 
       {/* Review Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
+      <Modal
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Share Your Experience"
       >
@@ -1488,7 +1512,7 @@ export const AllReviewsPage: React.FC = () => {
                   <input
                     type="text"
                     value={formData.fullName}
-                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     className={cn(
                       "w-full px-6 py-4 rounded-2xl border bg-paper/50 focus:outline-none transition-all",
                       errors.fullName ? "border-red-500" : formData.fullName.length >= 3 ? "border-emerald-500" : "border-black/5"
@@ -1502,7 +1526,7 @@ export const AllReviewsPage: React.FC = () => {
                   <input
                     type="text"
                     value={formData.userId}
-                    onChange={(e) => setFormData({...formData, userId: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
                     className={cn(
                       "w-full px-6 py-4 rounded-2xl border bg-paper/50 focus:outline-none transition-all",
                       errors.userId ? "border-red-500" : formData.userId ? "border-emerald-500" : "border-black/5"
@@ -1519,7 +1543,7 @@ export const AllReviewsPage: React.FC = () => {
                   <input
                     type="text"
                     value={formData.universityId}
-                    onChange={(e) => setFormData({...formData, universityId: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, universityId: e.target.value })}
                     className={cn(
                       "w-full px-6 py-4 rounded-2xl border bg-paper/50 focus:outline-none transition-all",
                       errors.universityId ? "border-red-500" : formData.universityId ? "border-emerald-500" : "border-black/5"
@@ -1533,7 +1557,7 @@ export const AllReviewsPage: React.FC = () => {
                   <input
                     type="text"
                     value={formData.contactNumber}
-                    onChange={(e) => setFormData({...formData, contactNumber: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
                     className={cn(
                       "w-full px-6 py-4 rounded-2xl border bg-paper/50 focus:outline-none transition-all",
                       errors.contactNumber ? "border-red-500" : /^\d{10}$/.test(formData.contactNumber) ? "border-emerald-500" : "border-black/5"
@@ -1551,7 +1575,7 @@ export const AllReviewsPage: React.FC = () => {
                     <button
                       key={star}
                       type="button"
-                      onClick={() => setFormData({...formData, rating: star})}
+                      onClick={() => setFormData({ ...formData, rating: star })}
                       className={cn(
                         "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
                         formData.rating >= star ? "bg-gold text-white shadow-lg shadow-gold/20" : "bg-paper text-ink/20 hover:bg-black/5"
@@ -1571,7 +1595,7 @@ export const AllReviewsPage: React.FC = () => {
                 </div>
                 <textarea
                   value={formData.comment}
-                  onChange={(e) => setFormData({...formData, comment: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
                   rows={4}
                   className={cn(
                     "w-full px-6 py-4 rounded-3xl border bg-paper/50 focus:outline-none transition-all resize-none",
