@@ -43,6 +43,10 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
     return acc;
   }, {} as { [key: number]: number }) || {};
 
+  const displayImages = (accommodation.images && accommodation.images.length > 0) 
+    ? accommodation.images 
+    : [accommodation.image].filter(Boolean);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -87,7 +91,7 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
           <div className="space-y-6">
             <div className="relative aspect-[16/9] rounded-[2.5rem] overflow-hidden shadow-2xl group">
               <img 
-                src={accommodation.images?.[activeImage]} 
+                src={displayImages[activeImage] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80'} 
                 alt={accommodation.name}
                 className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
                 referrerPolicy="no-referrer"
@@ -98,36 +102,40 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
               </div>
               
               {/* Gallery Navigation */}
-              <div className="absolute inset-y-0 left-4 right-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => setActiveImage(prev => (prev > 0 ? prev - 1 : (accommodation.images?.length || 1) - 1))}
-                  className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-ink shadow-lg hover:bg-white transition-colors"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <button 
-                  onClick={() => setActiveImage(prev => (prev < (accommodation.images?.length || 1) - 1 ? prev + 1 : 0))}
-                  className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-ink shadow-lg hover:bg-white transition-colors"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
+              {displayImages.length > 1 && (
+                <div className="absolute inset-y-0 left-4 right-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => setActiveImage(prev => (prev > 0 ? prev - 1 : displayImages.length - 1))}
+                    className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-ink shadow-lg hover:bg-white transition-colors"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button 
+                    onClick={() => setActiveImage(prev => (prev < displayImages.length - 1 ? prev + 1 : 0))}
+                    className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-ink shadow-lg hover:bg-white transition-colors"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              )}
             </div>
             
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-2">
-              {accommodation.images?.map((img, i) => (
-                <button 
-                  key={i}
-                  onClick={() => setActiveImage(i)}
-                  className={cn(
-                    "relative w-28 h-20 rounded-2xl overflow-hidden flex-shrink-0 transition-all duration-300 border-2",
-                    activeImage === i ? "border-gold scale-105 shadow-lg" : "border-transparent opacity-50 hover:opacity-100"
-                  )}
-                >
-                  <img src={img} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                </button>
-              ))}
-            </div>
+            {displayImages.length > 1 && (
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-2">
+                {displayImages.map((img, i) => (
+                  <button 
+                    key={i}
+                    onClick={() => setActiveImage(i)}
+                    className={cn(
+                      "relative w-28 h-20 rounded-2xl overflow-hidden flex-shrink-0 transition-all duration-300 border-2",
+                      activeImage === i ? "border-gold scale-105 shadow-lg" : "border-transparent opacity-50 hover:opacity-100"
+                    )}
+                  >
+                    <img src={img as string} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Header Info */}
@@ -158,22 +166,37 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
             </div>
           </div>
 
-          {/* Facilities */}
-          <div className="space-y-8 pt-8 border-t border-black/5">
-            <h2 className="text-3xl font-serif text-ink flex items-center gap-3">
-              <Info size={28} className="text-gold" />
-              Amenities & Features
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-              {accommodation.facilities?.map((facility, i) => (
-                <div key={i} className="flex items-center gap-5 p-6 rounded-[2rem] bg-paper/30 border border-black/5 hover:bg-white hover:shadow-xl hover:shadow-black/5 transition-all group">
-                  <div className="w-12 h-12 rounded-full bg-white text-gold flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                    {getFacilityIcon(facility)}
+          {/* Facilities & Utilities */}
+          <div className="space-y-12 pt-8 border-t border-black/5">
+            <div className="space-y-6">
+              <h2 className="text-3xl font-serif text-ink flex items-center gap-3">
+                <Info size={28} className="text-gold" />
+                Amenities & Features
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                {accommodation.facilities?.map((facility, i) => (
+                  <div key={i} className="flex items-center gap-5 p-6 rounded-[2rem] bg-paper/30 border border-black/5 hover:bg-white hover:shadow-xl hover:shadow-black/5 transition-all group">
+                    <div className="w-12 h-12 rounded-full bg-white text-gold flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                      {getFacilityIcon(facility)}
+                    </div>
+                    <span className="font-bold text-ink/80 text-sm uppercase tracking-wider">{facility}</span>
                   </div>
-                  <span className="font-bold text-ink/80 text-sm uppercase tracking-wider">{facility}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
+            {accommodation.utilitiesIncluded && accommodation.utilitiesIncluded.length > 0 && (
+              <div className="space-y-6 pt-6 border-t border-black/5">
+                <h3 className="text-sm font-bold text-ink/40 uppercase tracking-[0.2em] ml-2">Utilities Included in Rent</h3>
+                <div className="flex flex-wrap gap-3">
+                  {accommodation.utilitiesIncluded.map((utility, i) => (
+                    <span key={i} className="px-6 py-2.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-bold uppercase tracking-widest">
+                      {utility}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Location & Map */}
@@ -193,7 +216,7 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
                 scrolling="no"
                 marginHeight={0}
                 marginWidth={0}
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(`${accommodation.location}, ${accommodation.city}, Sri Lanka`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                src={accommodation.mapEmbedUrl || `https://maps.google.com/maps?q=${encodeURIComponent(`${accommodation.location}, ${accommodation.city}, Sri Lanka`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                 className="w-full h-full grayscale hover:grayscale-0 transition-all duration-700"
                 title={`Map of ${accommodation.name}`}
               />
@@ -276,7 +299,7 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
                   </div>
                   <div>
                     <p className="text-[9px] text-ink/30 font-bold uppercase tracking-widest">Security Deposit</p>
-                    <p className="font-bold text-ink text-sm uppercase tracking-wider">1 Month Rent</p>
+                    <p className="font-bold text-ink text-sm uppercase tracking-wider">{accommodation.deposit || 'Contact Owner'}</p>
                   </div>
                 </div>
               </div>

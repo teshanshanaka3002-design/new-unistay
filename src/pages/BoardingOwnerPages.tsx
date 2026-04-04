@@ -59,29 +59,48 @@ export const DashboardOverview: React.FC = () => {
   }, [user]);
 
   const stats = [
-    { label: 'Total Listings', value: totalListings.toString(), icon: <Home className="text-blue-500" />, color: 'bg-blue-50' },
-    { label: 'Total Bookings', value: totalBookings.toString(), icon: <Users className="text-emerald-500" />, color: 'bg-emerald-50' },
-    { label: 'Pending Requests', value: pendingRequests.toString(), icon: <CheckCircle2 className="text-amber-500" />, color: 'bg-amber-50' },
-    { label: 'Average Rating', value: '4.8', icon: <Star className="text-purple-500" />, color: 'bg-purple-50' },
+    { label: 'Total Listings', value: totalListings.toString(), icon: <Home className="text-white" size={24} />, color: 'bg-gradient-to-br from-blue-500 to-blue-700', shadow: 'shadow-blue-500/30' },
+    { label: 'Total Bookings', value: totalBookings.toString(), icon: <Users className="text-white" size={24} />, color: 'bg-gradient-to-br from-emerald-500 to-emerald-700', shadow: 'shadow-emerald-500/30' },
+    { label: 'Pending Requests', value: pendingRequests.toString(), icon: <CheckCircle2 className="text-white" size={24} />, color: 'bg-gradient-to-br from-amber-500 to-orange-600', shadow: 'shadow-orange-500/30' },
+    { label: 'Average Rating', value: '4.8', icon: <Star className="text-white" size={24} />, color: 'bg-gradient-to-br from-purple-500 to-indigo-600', shadow: 'shadow-indigo-500/30' },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 p-6 md:p-12">
-      <div>
-        <h1 className="text-4xl font-serif text-ink">Owner Dashboard</h1>
-        <p className="text-ink/40 font-medium mt-2">Welcome back! Here's what's happening with your properties today.</p>
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 p-6 md:p-12">
+      {/* Welcome Hero Area */}
+      <div className="relative overflow-hidden rounded-[3rem] bg-ink text-white p-10 md:p-14 shadow-2xl">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gold/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/20 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+        
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="space-y-4">
+            <h1 className="text-5xl font-serif leading-tight">Welcome back,<br /><span className="text-gold">{user?.name?.split(' ')[0] || 'Partner'}</span></h1>
+            <p className="text-white/60 text-lg font-light max-w-md">Manage your properties, review incoming student applications, and optimize your listings all from your command center.</p>
+          </div>
+          <div className="flex gap-4 md:justify-end">
+             <Button 
+                className="h-14 px-8 rounded-full bg-gold text-ink hover:bg-gold/90 font-bold uppercase tracking-widest text-xs shadow-xl shadow-gold/20 flex items-center gap-2"
+                onClick={() => navigate('/owner/add-listing')}
+              >
+                <Plus size={18} />
+                New Listing
+              </Button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {stats.map((stat) => (
-          <Card key={`stat-${stat.label}`} className="p-8 border-black/5 hover:shadow-2xl hover:shadow-ink/5 transition-all duration-500 group">
-            <div className="flex items-center gap-6">
-              <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-transform duration-500 group-hover:scale-110 ${stat.color}`}>
+          <Card key={`stat-${stat.label}`} className="p-8 border-none bg-white hover:shadow-2xl hover:shadow-ink/5 transition-all duration-500 group rounded-[2.5rem] relative overflow-hidden">
+            <div className={`absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-10 transition-transform duration-700 group-hover:scale-150 ${stat.color}`} />
+            
+            <div className="flex flex-col gap-6 relative z-10">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-500 group-hover:-translate-y-1 ${stat.color} ${stat.shadow}`}>
                 {stat.icon}
               </div>
               <div>
+                <p className="text-4xl font-serif text-ink mb-1">{stat.value}</p>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">{stat.label}</p>
-                <p className="text-3xl font-bold text-ink mt-1">{stat.value}</p>
               </div>
             </div>
           </Card>
@@ -89,41 +108,60 @@ export const DashboardOverview: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 p-8" title="Performance Overview" description="Monthly booking trends and revenue">
-          <div className="h-64 w-full bg-paper/50 rounded-[2rem] border border-dashed border-black/10 flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <BarChart3 className="mx-auto text-gold/40" size={48} />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Interactive Analytics Coming Soon</p>
+        <Card className="lg:col-span-2 p-8 border-none bg-white rounded-[2.5rem] shadow-xl shadow-black/5" title="Performance Overview" description="Monthly booking trends and occupancy rates">
+          <div className="h-72 w-full bg-paper/50 rounded-[2rem] border border-black/5 flex flex-col items-center justify-center relative overflow-hidden group">
+            {/* Mock Chart UI */}
+            <div className="absolute bottom-0 left-0 w-full h-full flex items-end justify-between px-8 pt-10 pb-4 opacity-40">
+              {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
+                <div key={i} className="w-[10%] bg-gradient-to-t from-gold to-gold/20 rounded-t-lg transition-all duration-1000 group-hover:from-gold group-hover:to-gold/50" style={{ height: `${h}%` }} />
+              ))}
+            </div>
+            
+            <div className="text-center space-y-4 relative z-10 bg-white/80 p-6 rounded-3xl backdrop-blur-sm border border-black/5 shadow-xl">
+              <BarChart3 className="mx-auto text-gold" size={32} />
+              <p className="text-[10px] font-bold uppercase tracking-widest text-ink">Interactive Analytics Coming Soon</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-8" title="Quick Actions" description="Common management tasks">
-          <div className="space-y-4">
-            <Button 
-              className="w-full justify-start gap-4 h-14 rounded-2xl" 
-              variant="outline"
+        <Card className="p-8 border-none bg-white rounded-[2.5rem] shadow-xl shadow-black/5" title="Quick Actions" description="Fast track management tasks">
+          <div className="space-y-4 pt-4">
+            <button 
+              className="w-full flex items-center gap-5 p-5 rounded-[1.5rem] bg-paper/50 hover:bg-gold/10 border border-transparent hover:border-gold/20 transition-all text-left group"
               onClick={() => navigate('/owner/add-listing')}
             >
-              <Plus size={20} className="text-gold" />
-              Add New Listing
-            </Button>
-            <Button 
-              className="w-full justify-start gap-4 h-14 rounded-2xl" 
-              variant="outline"
+              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                <Plus size={20} className="text-gold" />
+              </div>
+              <div>
+                <p className="font-bold text-ink text-sm">Add New Listing</p>
+                <p className="text-[10px] text-ink/40 uppercase tracking-widest mt-1">Publish a property</p>
+              </div>
+            </button>
+            <button 
+              className="w-full flex items-center gap-5 p-5 rounded-[1.5rem] bg-paper/50 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all text-left group"
               onClick={() => navigate('/owner/bookings')}
             >
-              <Users size={20} className="text-gold" />
-              Review Bookings
-            </Button>
-            <Button 
-              className="w-full justify-start gap-4 h-14 rounded-2xl" 
-              variant="outline"
+              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                <Users size={20} className="text-emerald-500" />
+              </div>
+              <div>
+                <p className="font-bold text-ink text-sm">Review Bookings</p>
+                <p className="text-[10px] text-ink/40 uppercase tracking-widest mt-1">Manage applications</p>
+              </div>
+            </button>
+            <button 
+              className="w-full flex items-center gap-5 p-5 rounded-[1.5rem] bg-paper/50 hover:bg-blue-50 border border-transparent hover:border-blue-200 transition-all text-left group"
               onClick={() => navigate('/owner/student-requests')}
             >
-              <MessageSquare size={20} className="text-gold" />
-              Student Requests
-            </Button>
+              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                <MessageSquare size={20} className="text-blue-500" />
+              </div>
+              <div>
+                <p className="font-bold text-ink text-sm">Student Requests</p>
+                <p className="text-[10px] text-ink/40 uppercase tracking-widest mt-1">View pending leads</p>
+              </div>
+            </button>
           </div>
         </Card>
       </div>
@@ -139,11 +177,14 @@ export const AddListingForm: React.FC = () => {
     price: '',
     roomType: '',
     description: '',
-    facilities: [] as string[]
+    facilities: [] as string[],
+    mapEmbedUrl: '',
+    deposit: '',
+    utilitiesIncluded: [] as string[]
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
 
   const { user } = useAuth();
@@ -177,11 +218,12 @@ export const AddListingForm: React.FC = () => {
         price: Number(formData.price),
         ownerId: user.id,
         ownerName: user.name,
-        ownerPhone: user.phone || '0000000000', // Best effort if empty
-        city: formData.location, // Mapping for simple mock
+        ownerPhone: user.phone || '0000000000',
+        city: formData.location,
         university: 'Any',
         propertyType: 'Boarding House',
-        image: previewImage || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800'
+        image: previewImages[0] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800',
+        images: previewImages.length > 0 ? previewImages : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800']
       });
       
       setShowSuccessBanner(true);
@@ -191,9 +233,12 @@ export const AddListingForm: React.FC = () => {
         price: '',
         roomType: '',
         description: '',
-        facilities: [] as string[]
+        facilities: [] as string[],
+        mapEmbedUrl: '',
+        deposit: '',
+        utilitiesIncluded: [] as string[]
       });
-      setPreviewImage(null);
+      setPreviewImages([]);
       
       setTimeout(() => {
         setShowSuccessBanner(false);
@@ -216,15 +261,39 @@ export const AddListingForm: React.FC = () => {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (!files) return;
+    
+    // Convert to an array explicitly typed as File[] to prevent 'unknown' ts errors
+    const filesArray = Array.from(files).slice(0, 5 - previewImages.length) as File[];
+    
+    filesArray.forEach(file => {
       const reader = new FileReader();
-      reader.onloadend = () => setPreviewImage(reader.result as string);
+      reader.onloadend = () => {
+        setPreviewImages(prev => {
+          if (prev.length < 5) return [...prev, reader.result as string];
+          return prev;
+        });
+      };
       reader.readAsDataURL(file);
-    }
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setPreviewImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleUtility = (utility: string) => {
+    setFormData(prev => ({
+      ...prev,
+      utilitiesIncluded: prev.utilitiesIncluded.includes(utility)
+        ? prev.utilitiesIncluded.filter(u => u !== utility)
+        : [...prev.utilitiesIncluded, utility]
+    }));
   };
 
   const facilitiesList = ['WiFi', 'AC', 'Parking', 'Meals', 'Laundry'];
+  const utilitiesList = ['Water', 'Electricity', 'Gas', 'Internet', 'Garbage'];
 
   return (
     <div className="max-w-4xl mx-auto p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -261,169 +330,223 @@ export const AddListingForm: React.FC = () => {
         </motion.div>
       )}
 
-      <Card className="p-12 border-black/5 shadow-2xl shadow-ink/5">
+      <div className="space-y-8">
         <form onSubmit={handleSubmit} className="space-y-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <Input 
-                label="Boarding Name" 
-                placeholder="e.g. RoyalStudentSuites" 
-                value={formData.name}
-                onChange={e => {
-                  // Only allow letters and numbers, no special characters or spaces
-                  const cleanedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
-                  setFormData({ ...formData, name: cleanedValue });
-                }}
-                className={errors.name ? 'border-red-500' : ''}
-              />
-              {errors.name && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.name}</p>}
-              <p className="text-[10px] text-ink/40 ml-4">Only letters and numbers allowed (no spaces or special characters)</p>
+          
+          {/* Group 1: General Info */}
+          <Card className="p-8 md:p-12 border-none bg-white rounded-[2.5rem] shadow-xl shadow-black/5 space-y-12">
+            <div>
+              <h2 className="text-2xl font-serif text-ink mb-2">1. Basic Information</h2>
+              <p className="text-ink/60 text-sm font-light">Set the core details for your property listing.</p>
             </div>
-
-            <div className="space-y-2">
-              <Input 
-                label="Location" 
-                placeholder="e.g. 123UniversityAveColombo" 
-                value={formData.location}
-                onChange={e => {
-                  // Only allow letters and numbers, no special characters or spaces
-                  const cleanedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
-                  setFormData({ ...formData, location: cleanedValue });
-                }}
-                className={errors.location ? 'border-red-500' : ''}
-              />
-              {errors.location && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.location}</p>}
-              <p className="text-[10px] text-ink/40 ml-4">Only letters and numbers allowed (no spaces or special characters)</p>
-            </div>
-
-            <div className="space-y-2">
-              <Input 
-                label="Price per month ($)" 
-                type="number" 
-                placeholder="5000" 
-                value={formData.price}
-                onChange={e => {
-                  // Only allow numbers, no letters or special characters
-                  let numericValue = e.target.value.replace(/[^0-9]/g, '');
-                  
-                  // Allow empty input for typing, but enforce minimum on blur or submission
-                  if (numericValue === '') {
-                    setFormData({ ...formData, price: '' });
-                  } else {
-                    // Convert to number and enforce minimum
-                    const numValue = parseInt(numericValue);
-                    if (numValue < 5000) {
-                      // Allow typing but show visual feedback that it's below minimum
-                      setFormData({ ...formData, price: numericValue });
-                    } else {
-                      setFormData({ ...formData, price: numericValue });
-                    }
-                  }
-                }}
-                onBlur={e => {
-                  // Enforce minimum when user leaves the field
-                  const currentValue = e.target.value.replace(/[^0-9]/g, '');
-                  if (currentValue && parseInt(currentValue) < 5000) {
-                    setFormData({ ...formData, price: '5000' });
-                  }
-                }}
-                className={errors.price ? 'border-red-500' : (formData.price && parseInt(formData.price) < 5000) ? 'border-amber-500' : ''}
-                min="5000"
-              />
-              {errors.price && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.price}</p>}
-              {formData.price && parseInt(formData.price) < 5000 && (
-                <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest ml-4">Price must be at least $5,000</p>
-              )}
-              <p className="text-[10px] text-ink/40 ml-4">Minimum price is $5,000 per month (numbers only)</p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Room Type</label>
-              <select 
-                value={formData.roomType}
-                onChange={e => setFormData({ ...formData, roomType: e.target.value })}
-                className={`flex h-14 w-full rounded-[1.5rem] border border-black/5 bg-paper px-6 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold transition-all duration-300 ${errors.roomType ? 'border-red-500' : ''}`}
-              >
-                <option value="">Select Type</option>
-                <option value="Single">Single</option>
-                <option value="Double">Double</option>
-                <option value="Shared">Shared</option>
-              </select>
-              {errors.roomType && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.roomType}</p>}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Facilities</label>
-            <div className="flex flex-wrap gap-4">
-              {facilitiesList.map(facility => (
-                <button
-                  key={facility}
-                  type="button"
-                  onClick={() => toggleFacility(facility)}
-                  className={`px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 border ${
-                    formData.facilities.includes(facility)
-                      ? 'bg-ink text-white border-ink shadow-lg shadow-ink/20'
-                      : 'bg-white text-ink/40 border-black/5 hover:border-black/20'
-                  }`}
-                >
-                  {facility}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Description</label>
-            <textarea 
-              value={formData.description}
-              onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className={`flex min-h-[160px] w-full rounded-[2rem] border border-black/5 bg-paper px-6 py-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold transition-all duration-300 ${errors.description ? 'border-red-500' : ''}`}
-              placeholder="Tell students about the environment, rules, and what makes your place special..."
-            />
-            {errors.description && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.description}</p>}
-          </div>
-
-          <div className="space-y-6">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Upload Images</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="relative aspect-square rounded-[2rem] border-2 border-dashed border-black/5 bg-paper flex flex-col items-center justify-center overflow-hidden group hover:border-gold hover:bg-gold/5 transition-all cursor-pointer">
-                {previewImage ? (
-                  <>
-                    <img src={previewImage} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button variant="secondary" size="sm" type="button" onClick={() => setPreviewImage(null)}>Change</Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Upload size={32} className="text-ink/20 mb-4" />
-                    <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Upload Photo</p>
-                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageChange} />
-                  </>
-                )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <Input 
+                  label="Listing Name" 
+                  placeholder="e.g. RoyalStudentSuites" 
+                  value={formData.name}
+                  onChange={e => {
+                    const cleanedValue = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '');
+                    setFormData({ ...formData, name: cleanedValue });
+                  }}
+                  className={errors.name ? 'border-red-500' : ''}
+                />
+                {errors.name && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.name}</p>}
               </div>
-              {[1, 2, 3].map(i => (
-                <div key={i} className="aspect-square rounded-[2rem] border-2 border-dashed border-black/5 bg-paper/30 flex items-center justify-center text-ink/10">
-                  <ImageIcon size={32} />
-                </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="flex justify-end gap-6 pt-12 border-t border-black/5">
-            <Button variant="outline" type="button" className="px-12 rounded-full">Cancel</Button>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Room Configuration</label>
+                <select 
+                  value={formData.roomType}
+                  onChange={e => setFormData({ ...formData, roomType: e.target.value })}
+                  className={`flex h-14 w-full rounded-[1.5rem] border border-black/5 bg-paper px-6 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold transition-all duration-300 ${errors.roomType ? 'border-red-500' : ''}`}
+                >
+                  <option value="">Select Configuration</option>
+                  <option value="Single Room">Single Room</option>
+                  <option value="Double Room">Double Room</option>
+                  <option value="Shared Space">Shared Space</option>
+                  <option value="Entire House">Entire House / Apartment</option>
+                </select>
+                {errors.roomType && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.roomType}</p>}
+              </div>
+              
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Marketing Overview</label>
+                <textarea 
+                  value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  className={`flex min-h-[120px] w-full rounded-[2rem] border border-black/5 bg-paper px-6 py-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold transition-all duration-300 ${errors.description ? 'border-red-500' : ''}`}
+                  placeholder="Tell students about the environment, rules, and what makes your place special..."
+                />
+                {errors.description && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.description}</p>}
+              </div>
+            </div>
+          </Card>
+
+          {/* Group 2: Pricing & Utilities */}
+          <Card className="p-8 md:p-12 border-none bg-white rounded-[2.5rem] shadow-xl shadow-black/5 space-y-12">
+            <div>
+              <h2 className="text-2xl font-serif text-ink mb-2">2. Pricing & Amenities</h2>
+              <p className="text-ink/60 text-sm font-light">Provide accurate details to ensure transparent expectations.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <Input 
+                  label="Monthly Rent (LKR)" 
+                  type="number" 
+                  placeholder="25000" 
+                  value={formData.price}
+                  onChange={e => {
+                    let numericValue = e.target.value.replace(/[^0-9]/g, '');
+                    setFormData({ ...formData, price: numericValue });
+                  }}
+                  className={errors.price ? 'border-red-500' : ''}
+                />
+                {errors.price && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.price}</p>}
+              </div>
+              <div className="space-y-2">
+                <Input 
+                  label="Advance/Deposit Required" 
+                  placeholder="e.g. 2 Months Deposit" 
+                  value={formData.deposit}
+                  onChange={e => setFormData({ ...formData, deposit: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-6 pt-4 border-t border-black/5">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Included Utilities (Free of charge)</label>
+              <div className="flex flex-wrap gap-3">
+                {utilitiesList.map(item => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => toggleUtility(item)}
+                    className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 border ${
+                      formData.utilitiesIncluded.includes(item)
+                        ? 'bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/20'
+                        : 'bg-paper text-ink/60 border-transparent hover:border-black/10'
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6 pt-4 border-t border-black/5">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 ml-4">Property Facilities</label>
+              <div className="flex flex-wrap gap-3">
+                {facilitiesList.map(facility => (
+                  <button
+                    key={facility}
+                    type="button"
+                    onClick={() => toggleFacility(facility)}
+                    className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 border ${
+                      formData.facilities.includes(facility)
+                        ? 'bg-ink text-white border-ink shadow-md shadow-ink/20'
+                        : 'bg-paper text-ink/60 border-transparent hover:border-black/10'
+                    }`}
+                  >
+                    {facility}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          {/* Group 3: Location */}
+          <Card className="p-8 md:p-12 border-none bg-white rounded-[2.5rem] shadow-xl shadow-black/5 space-y-12">
+            <div>
+              <h2 className="text-2xl font-serif text-ink mb-2">3. Location details</h2>
+              <p className="text-ink/60 text-sm font-light">Where is this property mapped out for students?</p>
+            </div>
+            <div className="grid grid-cols-1 gap-8">
+              <div className="space-y-2">
+                <Input 
+                  label="Area / City" 
+                  placeholder="e.g. Malabe, Colombo" 
+                  value={formData.location}
+                  onChange={e => setFormData({ ...formData, location: e.target.value })}
+                  className={errors.location ? 'border-red-500' : ''}
+                />
+                {errors.location && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-4">{errors.location}</p>}
+              </div>
+
+              <div className="space-y-4 bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100">
+                <Input 
+                  label="Exact Google Maps URL" 
+                  placeholder="Paste URL (e.g. https://maps.app.goo.gl/xxxx or <iframe src=...>)" 
+                  value={formData.mapEmbedUrl}
+                  onChange={e => {
+                    let val = e.target.value;
+                    // Attempt to parse out src if they pasted an iframe
+                    const srcMatch = val.match(/src="([^"]+)"/);
+                    if (srcMatch && srcMatch[1]) {
+                      val = srcMatch[1];
+                    }
+                    setFormData({ ...formData, mapEmbedUrl: val });
+                  }}
+                />
+                <div className="flex gap-4 items-start text-blue-600/60 p-2">
+                  <Info size={20} className="flex-shrink-0 mt-0.5" />
+                  <p className="text-xs">Optional: Go to Google Maps, find your location, click "Share" &rarr; "Embed a map", and paste the link here to show an exact pin on your listing page.</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Group 4: Media */}
+          <Card className="p-8 md:p-12 border-none bg-white rounded-[2.5rem] shadow-xl shadow-black/5 space-y-12">
+             <div>
+              <h2 className="text-2xl font-serif text-ink mb-2">4. Photos</h2>
+              <p className="text-ink/60 text-sm font-light">Upload at least one high quality photo of your property.</p>
+            </div>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center ml-2">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Upload Images</label>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">{previewImages.length} / 5</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {previewImages.map((img, index) => (
+                  <div key={index} className="relative aspect-square rounded-[2rem] border-2 border-transparent bg-paper flex flex-col items-center justify-center overflow-hidden group shadow-md hover:shadow-lg transition-all">
+                    <img src={img} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                      <Button variant="destructive" size="sm" type="button" onClick={() => removeImage(index)} className="rounded-full w-12 h-12 p-0 text-white bg-red-500/90 hover:bg-red-600"><XCircle size={20}/></Button>
+                    </div>
+                  </div>
+                ))}
+                
+                {previewImages.length < 5 && (
+                  <div className="relative aspect-square rounded-[2rem] border-2 border-dashed border-black/10 bg-paper flex flex-col items-center justify-center overflow-hidden group hover:border-gold hover:bg-gold/5 transition-all cursor-pointer">
+                    <Upload size={32} className="text-ink/20 mb-3 group-hover:text-gold transition-colors" />
+                    <p className="text-[10px] font-bold text-ink/40 uppercase tracking-[0.1em] text-center px-4 group-hover:text-gold transition-colors">Add Photo</p>
+                    <input type="file" multiple accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageChange} />
+                  </div>
+                )}
+                
+                {[...Array(Math.max(0, 4 - previewImages.length))].map((_, i) => (
+                  <div key={`placeholder-${i}`} className="aspect-square rounded-[2rem] border-2 border-dashed border-black/5 bg-paper/30 flex items-center justify-center text-ink/5">
+                    <ImageIcon size={32} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          <div className="flex justify-end gap-6 pt-6">
+            <Button variant="outline" type="button" className="px-10 h-14 rounded-full font-bold">Cancel Overview</Button>
             <Button 
               type="submit" 
-              className="px-12 rounded-full" 
+              className="px-12 h-14 rounded-full bg-gold hover:bg-gold/90 text-ink font-bold shadow-xl shadow-gold/20 flex items-center gap-2" 
               isLoading={isSubmitting}
-              disabled={Object.keys(errors).length > 0}
             >
-              Publish Listing
+              <CheckCircle2 size={20} /> Publish Boarding
             </Button>
           </div>
         </form>
-      </Card>
+      </div>
     </div>
   );
 };
@@ -620,6 +743,8 @@ export const BookingsPage: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -645,6 +770,11 @@ export const BookingsPage: React.FC = () => {
       console.error(err);
       alert("Failed to update status.");
     }
+  };
+
+  const handleViewBooking = (booking: any) => {
+    setSelectedBooking(booking);
+    setIsViewModalOpen(true);
   };
 
   return (
@@ -678,7 +808,7 @@ export const BookingsPage: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-8 px-8 text-sm text-ink/60 font-medium">{booking.university}</td>
-                  <td className="py-8 px-8 text-sm text-ink/60 font-medium">{booking.nationalId}</td>
+                  <td className="py-8 px-8 text-sm text-ink/60 font-medium">{booking.contactNo || booking.nationalId}</td>
                   <td className="py-8 px-8">
                     <span className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
                       booking.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 
@@ -709,7 +839,7 @@ export const BookingsPage: React.FC = () => {
                           </Button>
                         </>
                       )}
-                      <Button size="sm" variant="outline" className="w-10 h-10 p-0 rounded-xl border-black/5">
+                      <Button size="sm" variant="outline" className="w-10 h-10 p-0 rounded-xl border-black/5" onClick={() => handleViewBooking(booking)}>
                         <Eye size={16} className="text-ink/20" />
                       </Button>
                     </div>
@@ -720,6 +850,59 @@ export const BookingsPage: React.FC = () => {
           </table>
         </div>
       </Card>
+
+      <Modal 
+        isOpen={isViewModalOpen} 
+        onClose={() => setIsViewModalOpen(false)}
+        title="Student Booking Information"
+        maxWidth="2xl"
+      >
+        {selectedBooking && (
+          <div className="space-y-8">
+            <div className="grid grid-cols-2 gap-6 bg-paper/50 p-6 rounded-[2rem] border border-black/5">
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Full Name</p>
+                <p className="text-lg font-bold text-ink">{selectedBooking.fullName}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Student ID</p>
+                <p className="text-lg font-bold text-ink">{selectedBooking.studentId}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">National ID (NIC)</p>
+                <p className="text-sm font-semibold text-ink/70">{selectedBooking.nationalId}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Contact / Phone</p>
+                <p className="text-sm font-semibold text-ink/70">{selectedBooking.contactNo || 'Not Provided'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">University</p>
+                <p className="text-sm font-semibold text-ink/70">{selectedBooking.university}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Room Type</p>
+                <p className="text-sm font-semibold text-ink/70">{selectedBooking.roomType}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Payment Proof & slip</p>
+              <div className="bg-paper/30 p-4 rounded-3xl border border-black/5 flex justify-center">
+                {selectedBooking.paymentProof ? (
+                  <img src={selectedBooking.paymentProof} alt="Payment Proof" className="max-h-64 object-contain rounded-xl" />
+                ) : (
+                  <p className="text-ink/40 italic text-sm py-8">No payment proof uploaded.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4 pt-4 border-t border-black/5">
+              <Button variant="outline" onClick={() => setIsViewModalOpen(false)}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

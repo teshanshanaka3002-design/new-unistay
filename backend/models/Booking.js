@@ -12,6 +12,7 @@ const bookingSchema = new mongoose.Schema({
     age: { type: String, required: true },
     studentId: { type: String, required: true },
     nationalId: { type: String, required: true },
+    contactNo: { type: String },
     moveInDate: { type: Date },
     notes: { type: String },
     status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" }

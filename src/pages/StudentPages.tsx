@@ -474,6 +474,7 @@ export const FindAccommodation: React.FC = () => {
       const realData = res.data.value ? res.data.value : (Array.isArray(res.data) ? res.data : []);
       const mapped = realData.map((item: any, index: number) => ({
         ...item,
+        image: (item.images && item.images.length > 0) ? item.images[0] : item.image,
         id: item._id || item.id || `acc-${Math.random()}`
       }));
       
@@ -489,7 +490,7 @@ export const FindAccommodation: React.FC = () => {
       if (mapped.length === 0) {
         const mockData = [
           {
-            id: 'acc-1',
+            id: '507f1f77bcf86cd799439011',
             name: 'SLIIT Green Residence - Block A',
             image: customImages[0],
             price: 25000,
@@ -504,7 +505,7 @@ export const FindAccommodation: React.FC = () => {
             description: 'Modern student accommodation with premium facilities'
           },
           {
-            id: 'acc-2',
+            id: '507f1f77bcf86cd799439012',
             name: 'SLIIT Green Residence - Block B',
             image: customImages[1],
             price: 22000,
@@ -519,7 +520,7 @@ export const FindAccommodation: React.FC = () => {
             description: 'Comfortable shared rooms with study facilities'
           },
           {
-            id: 'acc-3',
+            id: '507f1f77bcf86cd799439013',
             name: 'SLIIT Green Residence - Block C',
             image: customImages[2],
             price: 28000,
@@ -534,7 +535,7 @@ export const FindAccommodation: React.FC = () => {
             description: 'Premium accommodation with additional fitness facilities'
           },
           {
-            id: 'acc-4',
+            id: '507f1f77bcf86cd799439014',
             name: 'SLIIT Green Residence - Block D',
             image: customImages[3],
             price: 20000,
@@ -551,19 +552,14 @@ export const FindAccommodation: React.FC = () => {
         ];
         setListings(mockData);
       } else {
-        // Override images for existing API data with custom images
-        const updatedListings = mapped.map((item, index) => ({
-          ...item,
-          image: customImages[index % customImages.length]
-        }));
-        setListings(updatedListings);
+        setListings(mapped);
       }
     } catch (err) {
       console.error('Failed to fetch listings', err);
       // Fallback to mock data on error
       const mockData = [
         {
-          id: 'acc-1',
+          id: '507f1f77bcf86cd799439011',
           name: 'SLIIT Green Residence - Block A',
           image: 'https://www.ecu.edu.lk/wp-content/uploads/accommodation-430x286-1.jpg',
           price: 25000,
@@ -578,7 +574,7 @@ export const FindAccommodation: React.FC = () => {
           description: 'Modern student accommodation with premium facilities'
         },
         {
-          id: 'acc-2',
+          id: '507f1f77bcf86cd799439012',
           name: 'SLIIT Green Residence - Block B',
           image: 'https://static.sliit.lk/wp-content/uploads/2018/03/Student-Accomodation-2.jpg',
           price: 22000,
@@ -593,7 +589,7 @@ export const FindAccommodation: React.FC = () => {
           description: 'Comfortable shared rooms with study facilities'
         },
         {
-          id: 'acc-3',
+          id: '507f1f77bcf86cd799439013',
           name: 'SLIIT Green Residence - Block C',
           image: 'https://housinganywhere.imgix.net/room/1413910/beb7b3f6-efed-11e8-a6c4-42010af00007.jpg',
           price: 28000,
@@ -608,7 +604,7 @@ export const FindAccommodation: React.FC = () => {
           description: 'Premium accommodation with additional fitness facilities'
         },
         {
-          id: 'acc-4',
+          id: '507f1f77bcf86cd799439014',
           name: 'SLIIT Green Residence - Block D',
           image: 'https://www.ecu.edu.lk/wp-content/uploads/accommodation-430x286-1.jpg',
           price: 20000,
@@ -693,11 +689,18 @@ export const FindAccommodation: React.FC = () => {
       return;
     }
     try {
-      await bookingService.create({
+      // Clean up empty optional fields to prevent MongoDB CastErrors
+      const payload = {
         ...data,
         accommodationId: selectedListing._id || selectedListing.id,
         studentId: user.id, // Live authenticated user ID
-      });
+      };
+      
+      if (!payload.moveInDate) {
+        delete payload.moveInDate;
+      }
+      
+      await bookingService.create(payload);
       setIsBookingModalOpen(false);
       alert('Booking request sent successfully!');
     } catch (err) {
