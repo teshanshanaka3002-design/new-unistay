@@ -29,13 +29,28 @@ router.get("/owner/:ownerId", async (req, res) => {
     }
 });
 
+// Get bookings for a specific student
+router.get("/student/:studentId", async (req, res) => {
+    try {
+        const bookings = await Booking.find({ studentId: req.params.studentId })
+            .populate("accommodationId")
+            .sort({ createdAt: -1 }); // newest first
+        res.json(bookings);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Update booking status
 router.put("/:id/status", async (req, res) => {
     try {
-        const { status } = req.body;
+        const { status, notes } = req.body;
+        const updateData = { status };
+        if (notes) updateData.notes = notes;
+        
         const updatedBooking = await Booking.findByIdAndUpdate(
             req.params.id,
-            { status },
+            updateData,
             { new: true }
         );
         res.json(updatedBooking);

@@ -56,7 +56,8 @@ export const accommodationService = {
 export const bookingService = {
   create: (data: any) => api.post('/bookings', data),
   getByOwner: (ownerId: string) => api.get(`/bookings/owner/${ownerId}`),
-  updateStatus: (id: string, status: string) => api.put(`/bookings/${id}/status`, { status }),
+  getByStudent: (studentId: string) => api.get(`/bookings/student/${studentId}`),
+  updateStatus: (id: string, status: string, notes?: string) => api.put(`/bookings/${id}/status`, { status, notes }),
 };
 
 export const restaurantService = {
