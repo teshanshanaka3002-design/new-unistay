@@ -443,10 +443,12 @@ import { AccommodationDetails } from '../components/accommodation/AccommodationD
 import { BookingModal } from '../components/accommodation/BookingModal';
 import { ContactModal } from '../components/accommodation/ContactModal';
 import axios from 'axios';
+import { accommodationService, bookingService } from '../services/api';
 
 // --- Find Accommodation ---
 export const FindAccommodation: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
   const [selectedListing, setSelectedListing] = useState<any>(null);
@@ -467,8 +469,10 @@ export const FindAccommodation: React.FC = () => {
   const fetchListings = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/accommodations');
-      const mapped = (Array.isArray(res.data) ? res.data : []).map((item: any, index: number) => ({
+      const res = await accommodationService.getAll({});
+      
+      const realData = res.data.value ? res.data.value : (Array.isArray(res.data) ? res.data : []);
+      const mapped = realData.map((item: any, index: number) => ({
         ...item,
         id: item._id || item.id || `acc-${Math.random()}`
       }));
@@ -684,16 +688,21 @@ export const FindAccommodation: React.FC = () => {
   };
 
   const handleBookingSubmit = async (data: any) => {
+    if (!user) {
+      alert("You must be logged in to book.");
+      return;
+    }
     try {
-      await axios.post('/api/bookings', {
+      await bookingService.create({
         ...data,
-        accommodationId: selectedListing._id,
-        studentId: 'student-123', // Mock student ID
+        accommodationId: selectedListing._id || selectedListing.id,
+        studentId: user.id, // Live authenticated user ID
       });
       setIsBookingModalOpen(false);
       alert('Booking request sent successfully!');
     } catch (err) {
       console.error('Failed to submit booking', err);
+      alert('Error submitting booking.');
     }
   };
 

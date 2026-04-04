@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, Role } from '../context/AuthContext';
 import { Button, Input, Card } from '../components/UI';
 import { LogIn, UserPlus, ShieldCheck, GraduationCap, Building2, Utensils } from 'lucide-react';
-
+import { authService } from '../services/api';
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -17,50 +17,20 @@ export const LoginPage: React.FC = () => {
     setError('');
 
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Actual API call
+      const response = await authService.login(formData);
+      const { token, user } = response.data;
       
-      // Special Admin Login
-      if (formData.email === 'admin@uni.edu' && formData.password === 'AdminPassword123!') {
-        login('mock-jwt-token', {
-          id: 'admin-1',
-          email: 'admin@uni.edu',
-          name: 'System Admin',
-          role: 'ADMIN',
-        });
-        navigate('/dashboard/admin');
-        return;
-      }
+      login(token, user);
 
-      // Mock user data based on email for testing or saved registration role
-      let role: Role = 'STUDENT';
-      const savedRole = localStorage.getItem(`mock_role_${formData.email}`);
-      
-      if (savedRole) {
-        role = savedRole as Role;
-      } else if (formData.email.includes('admin')) {
-        role = 'ADMIN';
-      } else if (formData.email.includes('boarding')) {
-        role = 'BOARDING_OWNER';
-      } else if (formData.email.includes('restaurant')) {
-        role = 'RESTAURANT_OWNER';
-      }
-
-      login('mock-jwt-token', {
-        id: '1',
-        email: formData.email,
-        name: formData.email.split('@')[0],
-        role: role,
-      });
-
-      const dashboardPath = role === 'STUDENT' ? '/dashboard/student' : 
-                          role === 'BOARDING_OWNER' ? '/owner-dashboard' :
-                          role === 'RESTAURANT_OWNER' ? '/restaurant-dashboard' :
+      const dashboardPath = user.role === 'STUDENT' ? '/dashboard/student' : 
+                          user.role === 'BOARDING_OWNER' ? '/owner-dashboard' :
+                          user.role === 'RESTAURANT_OWNER' ? '/restaurant-dashboard' :
                           '/dashboard/admin';
       
       navigate(dashboardPath);
-    } catch (err) {
-      setError('Invalid email or password');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
@@ -181,15 +151,17 @@ export const RegisterPage: React.FC = () => {
     setError('');
 
     try {
-      // Mock registration
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Save the role to local storage so the mock login can use it
-      localStorage.setItem(`mock_role_${formData.email}`, role);
+      // Real registration
+      await authService.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: role
+      });
       
       navigate('/login');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

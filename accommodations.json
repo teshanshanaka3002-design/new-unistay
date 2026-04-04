@@ -1,0 +1,151 @@
+{
+    "value":  [
+                  {
+                      "_id":  "69c1a22efb06ab633a8deeb0",
+                      "name":  "SLIIT Green Residence",
+                      "description":  "Modern student housing located just minutes away from SLIIT campus. Features high-speed internet, 24/7 security, and a vibrant student community. Perfect for those looking for a balanced study-life environment.",
+                      "price":  25000,
+                      "rating":  4.8,
+                      "city":  "Malabe",
+                      "location":  "123 University Ave",
+                      "university":  "SLIIT",
+                      "image":  "https://picsum.photos/seed/acc1/800/600",
+                      "images":  [
+                                     "https://picsum.photos/seed/acc1/800/600",
+                                     "https://picsum.photos/seed/room1/800/600",
+                                     "https://picsum.photos/seed/bath1/800/600"
+                                 ],
+                      "roomTypes":  [
+
+                                    ],
+                      "facilities":  [
+                                         "WiFi",
+                                         "Air Conditioning",
+                                         "Attached Bathroom",
+                                         "Parking",
+                                         "CCTV Security"
+                                     ],
+                      "ownerName":  "Sunil Perera",
+                      "ownerPhone":  "+94 77 123 4567",
+                      "reviews":  [
+                                      {
+                                          "userName":  "Amali",
+                                          "rating":  5,
+                                          "comment":  "Great place, very close to campus!",
+                                          "date":  "2026-02-15T00:00:00.000Z",
+                                          "_id":  "69c1a22efb06ab633a8deeb1"
+                                      },
+                                      {
+                                          "userName":  "Kasun",
+                                          "rating":  4,
+                                          "comment":  "Clean and quiet, perfect for studying.",
+                                          "date":  "2026-03-01T00:00:00.000Z",
+                                          "_id":  "69c1a22efb06ab633a8deeb2"
+                                      }
+                                  ],
+                      "__v":  0
+                  },
+                  {
+                      "_id":  "69c1a22efb06ab633a8deeb3",
+                      "name":  "Kaduwela Student Inn",
+                      "description":  "Affordable and cozy shared rooms in the heart of Kaduwela. Ideal for students on a budget who still want quality living conditions. Includes basic utilities and common study areas.",
+                      "price":  18500,
+                      "rating":  4.5,
+                      "city":  "Kaduwela",
+                      "location":  "45 Main St",
+                      "university":  "SAITM",
+                      "image":  "https://picsum.photos/seed/acc2/800/600",
+                      "images":  [
+                                     "https://picsum.photos/seed/acc2/800/600",
+                                     "https://picsum.photos/seed/room2/800/600"
+                                 ],
+                      "roomTypes":  [
+
+                                    ],
+                      "facilities":  [
+                                         "WiFi",
+                                         "Parking",
+                                         "Meals Included",
+                                         "Laundry"
+                                     ],
+                      "ownerName":  "Nimal Silva",
+                      "ownerPhone":  "+94 71 987 6543",
+                      "reviews":  [
+                                      {
+                                          "userName":  "Dilshan",
+                                          "rating":  4,
+                                          "comment":  "Good value for money.",
+                                          "date":  "2026-01-20T00:00:00.000Z",
+                                          "_id":  "69c1a22efb06ab633a8deeb4"
+                                      }
+                                  ],
+                      "__v":  0
+                  },
+                  {
+                      "_id":  "69c1a22efb06ab633a8deeb5",
+                      "name":  "NSBM Premium Annex",
+                      "description":  "High-end annex for NSBM students. Features premium furniture, private kitchen, and high-speed fiber internet. Located in a quiet residential area of Pitipana.",
+                      "price":  45000,
+                      "rating":  4.9,
+                      "city":  "Homagama",
+                      "location":  "Pitipana North",
+                      "university":  "NSBM",
+                      "image":  "https://picsum.photos/seed/acc3/800/600",
+                      "images":  [
+                                     "https://picsum.photos/seed/acc3/800/600",
+                                     "https://picsum.photos/seed/room3/800/600"
+                                 ],
+                      "roomTypes":  [
+
+                                    ],
+                      "facilities":  [
+                                         "WiFi",
+                                         "Air Conditioning",
+                                         "Attached Bathroom",
+                                         "Kitchen Access",
+                                         "24/7 Water \u0026 Electricity"
+                                     ],
+                      "ownerName":  "Kamala Devi",
+                      "ownerPhone":  "+94 77 555 1234",
+                      "reviews":  [
+                                      {
+                                          "userName":  "Sithmi",
+                                          "rating":  5,
+                                          "comment":  "Very safe and comfortable.",
+                                          "date":  "2026-03-10T00:00:00.000Z",
+                                          "_id":  "69c1a22efb06ab633a8deeb6"
+                                      }
+                                  ],
+                      "__v":  0
+                  },
+                  {
+                      "_id":  "69c1a22efb06ab633a8deeb7",
+                      "name":  "Moratuwa Scholars Hostel",
+                      "description":  "Standard hostel for UoM students. Walking distance to the university. Great for those who want to be close to campus activities.",
+                      "price":  12000,
+                      "rating":  4.2,
+                      "city":  "Moratuwa",
+                      "location":  "Katubedda",
+                      "university":  "University of Moratuwa",
+                      "image":  "https://picsum.photos/seed/acc4/800/600",
+                      "images":  [
+                                     "https://picsum.photos/seed/acc4/800/600"
+                                 ],
+                      "roomTypes":  [
+
+                                    ],
+                      "facilities":  [
+                                         "WiFi",
+                                         "Study Desk",
+                                         "24/7 Water \u0026 Electricity"
+                                     ],
+                      "ownerName":  "Bandara",
+                      "ownerPhone":  "+94 71 222 3333",
+                      "reviews":  [
+
+                                  ],
+                      "__v":  0
+                  }
+              ],
+    "Count":  4
+}

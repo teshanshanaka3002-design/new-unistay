@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { accommodationService, bookingService } from '../services/api';
 import { Card, Button, Input, Modal } from '../components/UI';
 import { 
   Plus, 
@@ -34,10 +36,32 @@ import { sanitizePhoneNumber } from '../lib/inputControl';
 // --- Dashboard Overview ---
 export const DashboardOverview: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [totalListings, setTotalListings] = useState(0);
+  const [totalBookings, setTotalBookings] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState(0);
+
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      if (!user) return;
+      try {
+        const accs = await accommodationService.getByOwner(user.id);
+        const bks = await bookingService.getByOwner(user.id);
+        
+        setTotalListings(accs.data.length || 0);
+        setTotalBookings(bks.data.length || 0);
+        setPendingRequests(bks.data.filter((b: any) => b.status === 'Pending').length || 0);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchDashboardStats();
+  }, [user]);
+
   const stats = [
-    { label: 'Total Listings', value: '4', icon: <Home className="text-blue-500" />, color: 'bg-blue-50' },
-    { label: 'Total Bookings', value: '12', icon: <Users className="text-emerald-500" />, color: 'bg-emerald-50' },
-    { label: 'Pending Requests', value: '3', icon: <CheckCircle2 className="text-amber-500" />, color: 'bg-amber-50' },
+    { label: 'Total Listings', value: totalListings.toString(), icon: <Home className="text-blue-500" />, color: 'bg-blue-50' },
+    { label: 'Total Bookings', value: totalBookings.toString(), icon: <Users className="text-emerald-500" />, color: 'bg-emerald-50' },
+    { label: 'Pending Requests', value: pendingRequests.toString(), icon: <CheckCircle2 className="text-amber-500" />, color: 'bg-amber-50' },
     { label: 'Average Rating', value: '4.8', icon: <Star className="text-purple-500" />, color: 'bg-purple-50' },
   ];
 
@@ -122,6 +146,8 @@ export const AddListingForm: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
 
+  const { user } = useAuth();
+  
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name) newErrors.name = 'Boarding Name is required';
@@ -139,30 +165,45 @@ export const AddListingForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    if (!user) {
+      alert("You must be logged in as an owner to post a listing.");
+      return;
+    }
 
     setIsSubmitting(true);
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
-    
-    // Show success banner
-    setShowSuccessBanner(true);
-    
-    // Reset form
-    setFormData({
-      name: '',
-      location: '',
-      price: '',
-      roomType: '',
-      description: '',
-      facilities: [] as string[]
-    });
-    setPreviewImage(null);
-    
-    // Hide banner after 5 seconds
-    setTimeout(() => {
-      setShowSuccessBanner(false);
-    }, 5000);
+    try {
+      await accommodationService.create({
+        ...formData,
+        price: Number(formData.price),
+        ownerId: user.id,
+        ownerName: user.name,
+        ownerPhone: user.phone || '0000000000', // Best effort if empty
+        city: formData.location, // Mapping for simple mock
+        university: 'Any',
+        propertyType: 'Boarding House',
+        image: previewImage || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800'
+      });
+      
+      setShowSuccessBanner(true);
+      setFormData({
+        name: '',
+        location: '',
+        price: '',
+        roomType: '',
+        description: '',
+        facilities: [] as string[]
+      });
+      setPreviewImage(null);
+      
+      setTimeout(() => {
+        setShowSuccessBanner(false);
+      }, 5000);
+    } catch (err) {
+      console.error('Failed to create listing', err);
+      alert('Failed to publish listing.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleFacility = (facility: string) => {
@@ -390,20 +431,41 @@ export const AddListingForm: React.FC = () => {
 // --- My Listings Page ---
 export const ListingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [listings, setListings] = useState([
-    { id: 1, name: 'Royal Student Suites', location: 'Colombo 07', price: 250, status: 'Available', image: 'https://picsum.photos/seed/boarding1/800/600' },
-    { id: 2, name: 'Green View Boarding', location: 'Kandy', price: 180, status: 'Not Available', image: 'https://picsum.photos/seed/boarding2/800/600' },
-    { id: 3, name: 'City Center Rooms', location: 'Colombo 03', price: 300, status: 'Available', image: 'https://picsum.photos/seed/boarding3/800/600' },
-  ]);
+  const { user } = useAuth();
+  const [listings, setListings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<any>(null);
 
-  const handleDelete = () => {
+  useEffect(() => {
+    const fetchListings = async () => {
+      if (!user) return;
+      try {
+        setLoading(true);
+        const res = await accommodationService.getByOwner(user.id);
+        setListings(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchListings();
+  }, [user]);
+
+  const handleDelete = async () => {
     if (selectedListing) {
-      setListings(prev => prev.filter(l => l.id !== selectedListing.id));
-      setIsDeleteModalOpen(false);
-      setSelectedListing(null);
+      const targetId = selectedListing._id || selectedListing.id;
+      try {
+        await accommodationService.delete(targetId);
+        setListings(prev => prev.filter(l => (l._id || l.id) !== targetId));
+        setIsDeleteModalOpen(false);
+        setSelectedListing(null);
+      } catch (err) {
+        console.error("Delete failed", err);
+        alert("Failed to delete.");
+      }
     }
   };
 
@@ -412,12 +474,19 @@ export const ListingsPage: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setListings(prev => prev.map(l => l.id === selectedListing.id ? selectedListing : l));
-    setIsEditModalOpen(false);
-    setSelectedListing(null);
-    alert('Listing updated successfully!');
+    const targetId = selectedListing._id || selectedListing.id;
+    try {
+      const res = await accommodationService.update(targetId, selectedListing);
+      setListings(prev => prev.map(l => (l._id || l.id) === targetId ? res.data : l));
+      setIsEditModalOpen(false);
+      setSelectedListing(null);
+      alert('Listing updated successfully!');
+    } catch (err) {
+      console.error("Update failed", err);
+      alert("Failed to update.");
+    }
   };
 
   return (
@@ -441,10 +510,8 @@ export const ListingsPage: React.FC = () => {
           <Card key={listing.id} className="p-0 overflow-hidden border-black/5 group hover:shadow-2xl hover:shadow-ink/10 transition-all duration-700 rounded-[2.5rem]">
             <div className="relative aspect-[4/3] overflow-hidden">
               <img src={listing.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" referrerPolicy="no-referrer" />
-              <div className={`absolute top-6 right-6 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl ${
-                listing.status === 'Available' ? 'bg-emerald-500 text-white' : 'bg-ink/60 text-white backdrop-blur-md'
-              }`}>
-                {listing.status}
+              <div className={`absolute top-6 right-6 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl bg-emerald-500 text-white`}>
+                Available
               </div>
             </div>
             <div className="p-8 space-y-6">
@@ -452,11 +519,11 @@ export const ListingsPage: React.FC = () => {
                 <h3 className="text-2xl font-serif text-ink">{listing.name}</h3>
                 <div className="flex items-center gap-2 text-ink/40">
                   <MapPin size={14} className="text-gold" />
-                  <span className="text-xs font-medium">{listing.location}</span>
+                  <span className="text-xs font-medium">{listing.city || listing.location}</span>
                 </div>
                 <div className="flex items-center gap-2 text-ink/40">
                   <DollarSign size={14} className="text-gold" />
-                  <span className="text-sm font-bold text-ink">${listing.price}</span>
+                  <span className="text-sm font-bold text-ink">Rs.{listing.price}</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest">/ month</span>
                 </div>
               </div>
@@ -550,14 +617,34 @@ export const ListingsPage: React.FC = () => {
 
 // --- Bookings Page ---
 export const BookingsPage: React.FC = () => {
-  const [bookings, setBookings] = useState([
-    { id: 1, student: 'John Doe', university: 'University of Colombo', contact: '+94 77 123 4567', status: 'Pending' },
-    { id: 2, student: 'Sarah Wilson', university: 'SLIIT', contact: '+94 71 987 6543', status: 'Approved' },
-    { id: 3, student: 'Mike Johnson', university: 'NSBM', contact: '+94 76 555 4444', status: 'Rejected' },
-  ]);
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [bookings, setBookings] = useState<any[]>([]);
 
-  const handleStatus = (id: number, status: string) => {
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!user) return;
+      try {
+        setLoading(true);
+        const res = await bookingService.getByOwner(user.id);
+        setBookings(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookings();
+  }, [user]);
+
+  const handleStatus = async (id: string, status: string) => {
+    try {
+      await bookingService.updateStatus(id, status);
+      setBookings(prev => prev.map(b => (b._id || b.id) === id ? { ...b, status } : b));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update status.");
+    }
   };
 
   return (
@@ -580,18 +667,18 @@ export const BookingsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {bookings.map((booking) => (
-                <tr key={booking.id} className="group hover:bg-paper transition-colors duration-500">
+              {bookings.map((booking, idx) => (
+                <tr key={booking._id || booking.id || idx} className="group hover:bg-paper transition-colors duration-500">
                   <td className="py-8 px-8">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-ink text-white flex items-center justify-center font-serif text-lg font-bold">
-                        {booking.student.charAt(0)}
+                        {(booking.fullName || "G").charAt(0)}
                       </div>
-                      <p className="text-sm font-bold text-ink">{booking.student}</p>
+                      <p className="text-sm font-bold text-ink">{booking.fullName}</p>
                     </div>
                   </td>
                   <td className="py-8 px-8 text-sm text-ink/60 font-medium">{booking.university}</td>
-                  <td className="py-8 px-8 text-sm text-ink/60 font-medium">{booking.contact}</td>
+                  <td className="py-8 px-8 text-sm text-ink/60 font-medium">{booking.nationalId}</td>
                   <td className="py-8 px-8">
                     <span className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
                       booking.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 
@@ -607,7 +694,7 @@ export const BookingsPage: React.FC = () => {
                         <>
                           <Button 
                             size="sm" 
-                            onClick={() => handleStatus(booking.id, 'Approved')}
+                            onClick={() => handleStatus(booking._id || booking.id, 'Approved')}
                             className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl px-6"
                           >
                             Approve
@@ -615,7 +702,7 @@ export const BookingsPage: React.FC = () => {
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => handleStatus(booking.id, 'Rejected')}
+                            onClick={() => handleStatus(booking._id || booking.id, 'Rejected')}
                             className="text-red-500 border-red-100 hover:bg-red-50 rounded-xl px-6"
                           >
                             Reject
@@ -639,51 +726,67 @@ export const BookingsPage: React.FC = () => {
 
 // --- Student Requests Page ---
 export const RequestsPage: React.FC = () => {
-  const requests = [
-    { id: 1, name: 'Alex Thompson', budget: '$200 - $300', location: 'Colombo 07', facilities: ['WiFi', 'AC'] },
-    { id: 2, name: 'Emily Chen', budget: '$150 - $200', location: 'Kandy', facilities: ['Meals', 'Laundry'] },
-    { id: 3, name: 'David Silva', budget: '$100 - $150', location: 'Malabe', facilities: ['WiFi', 'Parking'] },
-  ];
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      if (!user) return;
+      try {
+        setLoading(true);
+        const res = await bookingService.getByOwner(user.id);
+        const pending = res.data.filter((b: any) => b.status === 'Pending');
+        setRequests(pending);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPendingRequests();
+  }, [user]);
 
   return (
     <div className="p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-4">
         <h1 className="text-4xl font-serif text-ink">Student Requests</h1>
-        <p className="text-ink/40 font-medium">Students looking for accommodation in your area.</p>
+        <p className="text-ink/40 font-medium">Students looking for accommodation in your area recently.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         {requests.map((req) => (
-          <Card key={req.id} className="p-10 border-black/5 hover:shadow-2xl hover:shadow-ink/5 transition-all duration-700 rounded-[2.5rem] space-y-8">
+          <Card key={req._id || req.id} className="p-10 border-black/5 hover:shadow-2xl hover:shadow-ink/5 transition-all duration-700 rounded-[2.5rem] space-y-8">
             <div className="flex items-center gap-6">
               <div className="w-16 h-16 rounded-[1.5rem] bg-paper flex items-center justify-center text-ink font-serif text-2xl font-bold border border-black/5">
-                {req.name.charAt(0)}
+                {(req.fullName || "G").charAt(0)}
               </div>
               <div>
-                <h3 className="text-xl font-bold text-ink">{req.name}</h3>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gold">Active Request</p>
+                <h3 className="text-xl font-bold text-ink">{req.fullName}</h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gold text-ellipsis overflow-hidden whitespace-nowrap w-32">Booking Pending</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-ink/40 font-medium">Budget</span>
-                <span className="font-bold text-ink">{req.budget}</span>
+                <span className="text-ink/40 font-medium">University</span>
+                <span className="font-bold text-ink">{req.university}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-ink/40 font-medium">Preferred Location</span>
-                <span className="font-bold text-ink">{req.location}</span>
+                <span className="text-ink/40 font-medium">Message</span>
+                <span className="font-bold text-ink text-right max-w-32 truncate">{req.notes || 'None'}</span>
               </div>
             </div>
 
             <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Required Facilities</p>
               <div className="flex flex-wrap gap-2">
-                {req.facilities.map(f => (
-                  <span key={f} className="px-4 py-1.5 bg-paper rounded-full text-[10px] font-bold uppercase tracking-widest text-ink/60 border border-black/5">
-                    {f}
-                  </span>
-                ))}
+                <Button 
+                   className="w-full bg-emerald-500 hover:bg-emerald-600 rounded-full" 
+                   onClick={() => navigate('/owner/bookings')}
+                >
+                  Review in Bookings
+                </Button>
               </div>
             </div>
 
