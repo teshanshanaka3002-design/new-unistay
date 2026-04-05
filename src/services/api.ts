@@ -61,6 +61,22 @@ export const bookingService = {
 };
 
 export const restaurantService = {
-  getMenu: (restaurantId: string) => api.get(`/restaurants/${restaurantId}/menu`),
+  // Canteen / Cafe
+  getAllCanteens: () => api.get('/restaurants'),
+  getCanteensByOwner: (ownerId: string) => api.get(`/restaurants/owner/${ownerId}`),
+  createCanteen: (data: any) => api.post('/restaurants', data),
+  updateCanteen: (id: string, data: any) => api.put(`/restaurants/${id}`, data),
+  deleteCanteen: (id: string) => api.delete(`/restaurants/${id}`),
+
+  // Menu Items
+  getMenu: (canteenId: string) => api.get(`/restaurants/${canteenId}/menu`),
+  createMenuItem: (canteenId: string, data: any) => api.post(`/restaurants/${canteenId}/menu`, data),
+  updateMenuItem: (id: string, data: any) => api.put(`/restaurants/menu/${id}`, data),
+  deleteMenuItem: (id: string) => api.delete(`/restaurants/menu/${id}`),
+
+  // Orders
   placeOrder: (orderData: any) => api.post('/orders', orderData),
+  getOrdersByOwner: (ownerId: string) => api.get(`/orders/owner/${ownerId}`),
+  getOrdersByStudent: (studentId: string) => api.get(`/orders/student/${studentId}`),
+  updateOrderStatus: (id: string, status: string) => api.put(`/orders/${id}/status`, { status }),
 };

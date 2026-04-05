@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, CreditCard, ShoppingBag, User, School, Hash, Phone, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CreditCard, ShoppingBag, User, Upload, CheckCircle2 } from 'lucide-react';
 import { OrderItem, Canteen } from '../../types/canteen';
 import { Card, Badge } from '../UI';
 import { motion } from 'motion/react';
@@ -30,6 +30,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     phone: '',
     notes: '',
   });
+
+  const [identityProof, setIdentityProof] = useState<string | null>(null);
+  const [identityError, setIdentityError] = useState('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -100,8 +103,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     });
     setErrors(newErrors);
 
+    if (!identityProof) {
+      setIdentityError('Please upload your university ID or NIC for verification.');
+      return;
+    }
+
     if (Object.keys(newErrors).length === 0) {
-      onPlaceOrder(formData);
+      onPlaceOrder({ ...formData, identityProof });
     }
   };
 
@@ -237,6 +245,64 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   </div>
                 </div>
               </form>
+            </section>
+
+            {/* Identity Verification */}
+            <section className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <Upload size={20} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-serif text-ink">Identity Verification</h2>
+                  <p className="text-[10px] text-ink/40 font-bold uppercase tracking-widest">Upload your university ID or NIC</p>
+                </div>
+              </div>
+
+              <div className="relative aspect-video rounded-[2rem] border-2 border-dashed border-ink/10 bg-white flex flex-col items-center justify-center overflow-hidden group hover:border-gold/40 transition-all cursor-pointer">
+                {identityProof ? (
+                  <>
+                    <img src={identityProof} alt="ID Preview" className="w-full h-full object-contain" />
+                    <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setIdentityProof(null)}
+                        className="px-6 py-3 bg-white text-ink rounded-full text-[10px] font-bold uppercase tracking-widest"
+                      >
+                        Change Photo
+                      </button>
+                    </div>
+                    <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <CheckCircle2 size={16} className="text-white" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={36} className="text-ink/20 mb-4" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink/40">Click to upload your ID</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-ink/20 mt-2">JPEG, PNG — university student card or NIC</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setIdentityProof(reader.result as string);
+                            setIdentityError('');
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </>
+                )}
+              </div>
+              {identityError && (
+                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest ml-4">{identityError}</p>
+              )}
             </section>
 
             <section className="space-y-8">

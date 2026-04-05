@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
-import { ShoppingBag, ArrowLeft, Search, Filter, ChevronRight, Star, MapPin, Clock, MessageSquare, Plus } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Search, Filter, ChevronRight, Star, MapPin, Clock, Plus, History, CheckCircle2, ChefHat, Package, RefreshCw } from 'lucide-react';
 import { Canteen, MenuItem, OrderItem, Order } from '../../types/canteen';
 import { UniversityFilterBar } from './UniversityFilterBar';
 import { CafeCard } from './CafeCard';
@@ -14,15 +13,19 @@ import { RatingSummary } from '../reviews/RatingSummary';
 import { ReviewList } from '../reviews/ReviewList';
 import { ReviewModal } from '../reviews/ReviewModal';
 import { cn } from '../../lib/utils';
+import { restaurantService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export const MealsDashboard: React.FC = () => {
+  const { user } = useAuth();
   const [canteens, setCanteens] = useState<Canteen[]>([]);
   const [selectedUniversity, setSelectedUniversity] = useState('All');
   const [selectedCafe, setSelectedCafe] = useState<Canteen | null>(null);
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [view, setView] = useState<'dashboard' | 'menu' | 'checkout' | 'confirmation'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'menu' | 'checkout' | 'confirmation' | 'my-orders' | 'countdown'>('dashboard');
+  const [pendingOrderData, setPendingOrderData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,8 +48,9 @@ export const MealsDashboard: React.FC = () => {
   const fetchCanteens = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/canteens');
-      const mapped = (Array.isArray(res.data) ? res.data : []).map((item: any) => ({
+      const res = await restaurantService.getAllCanteens();
+      const data = Array.isArray(res.data) ? res.data : [];
+      const mapped = data.map((item: any) => ({
         ...item,
         id: item._id || item.id || `cant-${Math.random()}`
       }));
@@ -61,8 +65,9 @@ export const MealsDashboard: React.FC = () => {
   const fetchMenu = async (canteenId: string) => {
     setLoading(true);
     try {
-      const res = await axios.get(`/api/canteens/${canteenId}/menu`);
-      const mapped = (Array.isArray(res.data) ? res.data : []).map((item: any) => ({
+      const res = await restaurantService.getMenu(canteenId);
+      const data = Array.isArray(res.data) ? res.data : [];
+      const mapped = data.map((item: any) => ({
         ...item,
         id: item._id || item.id || `menu-${Math.random()}`
       }));
@@ -124,38 +129,73 @@ export const MealsDashboard: React.FC = () => {
     setCart(prev => prev.filter(i => i.menuItemId !== id));
   };
 
-  const handlePlaceOrder = async (formData: any) => {
+  const handlePlaceOrder = (formData: any) => {
     if (!selectedCafe) return;
-    
+
+    const pickupDate = new Date();
+    pickupDate.setMinutes(pickupDate.getMinutes() + 20);
+
     const orderData = {
-      studentId: 'stud-123', // Mock student ID
+      studentId: user?.id || 'guest',
       studentName: formData.fullName,
       studentUniversity: formData.university,
       studentYear: formData.year,
       studentIdNumber: formData.idNumber,
       studentPhone: formData.phone,
+      identityProof: formData.identityProof || null,
       canteenId: selectedCafe.id,
       canteenName: selectedCafe.name,
       items: cart,
       totalPrice: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      pickupTime: '15-20 mins',
-      notes: formData.notes,
+      pickupTime: pickupDate.toISOString(),
+      notes: formData.notes || '',
       status: 'Pending',
-      createdAt: new Date().toISOString()
     };
 
+    // Store & show 6-second cancel window instead of immediately placing
+    setPendingOrderData(orderData);
+    setView('countdown');
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!pendingOrderData) return;
     try {
-      const res = await axios.post('/api/orders', orderData);
+      const res = await restaurantService.placeOrder(pendingOrderData);
       setLastOrder({ ...res.data, id: res.data._id });
       setCart([]);
+      setPendingOrderData(null);
       setView('confirmation');
     } catch (err) {
       console.error('Error placing order:', err);
+      alert('Failed to place order. Please try again.');
+      setView('checkout');
     }
+  };
+
+  const handleCancelCountdown = () => {
+    setPendingOrderData(null);
+    setView('checkout');
   };
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // ── My Orders View ─────────────────────────────────────────────
+  if (view === 'my-orders') {
+    return <MyOrdersView onBack={() => setView('dashboard')} studentId={user?.id || ''} />;
+  }
+
+  // ── 6-Second Countdown Cancel Window ───────────────────────────
+  if (view === 'countdown' && pendingOrderData && selectedCafe) {
+    return (
+      <OrderCountdownOverlay
+        orderData={pendingOrderData}
+        canteenName={selectedCafe.name}
+        onConfirm={handleConfirmOrder}
+        onCancel={handleCancelCountdown}
+      />
+    );
+  }
 
   if (view === 'checkout' && selectedCafe) {
     return (
@@ -248,15 +288,24 @@ export const MealsDashboard: React.FC = () => {
                 </p>
               </div>
               
-              <div className="relative w-full md:w-96">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-ink/20" size={20} />
-                <input 
-                  type="text"
-                  placeholder="Search for cafes or food..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full h-16 pl-16 pr-6 rounded-full bg-white border border-black/5 text-ink font-medium text-sm focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all outline-none shadow-sm"
-                />
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1 min-w-[200px] md:w-80">
+                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-ink/20" size={20} />
+                  <input 
+                    type="text"
+                    placeholder="Search for cafes or food..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full h-16 pl-16 pr-6 rounded-full bg-white border border-black/5 text-ink font-medium text-sm focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all outline-none shadow-sm"
+                  />
+                </div>
+                <button
+                  onClick={() => setView('my-orders')}
+                  className="h-16 px-6 flex items-center gap-2 rounded-full bg-ink text-white font-bold uppercase tracking-widest text-[10px] shadow-xl hover:bg-gold transition-all duration-300 whitespace-nowrap shrink-0"
+                >
+                  <History size={16} />
+                  My Orders
+                </button>
               </div>
             </div>
 
@@ -475,6 +524,379 @@ export const MealsDashboard: React.FC = () => {
           </div>
         </>
       )}
+    </div>
+  );
+};
+
+
+// ─── My Orders View ─────────────────────────────────────────────────
+interface MyOrdersViewProps {
+  onBack: () => void;
+  studentId: string;
+}
+
+const STATUS_STEPS = ['Pending', 'Preparing', 'Ready', 'Collected'];
+
+const statusConfig: Record<string, { color: string; bg: string; label: string; icon: React.ReactNode }> = {
+  Pending:   { color: 'text-amber-600',   bg: 'bg-amber-50   border-amber-100',   label: 'Pending Review',  icon: <Clock size={14} /> },
+  Preparing: { color: 'text-blue-600',    bg: 'bg-blue-50    border-blue-100',    label: 'Preparing',       icon: <ChefHat size={14} /> },
+  Ready:     { color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100', label: 'Ready to Pick Up', icon: <Package size={14} /> },
+  Collected: { color: 'text-ink/40',      bg: 'bg-paper      border-black/5',     label: 'Collected',        icon: <CheckCircle2 size={14} /> },
+};
+
+const MyOrdersView: React.FC<MyOrdersViewProps> = ({ onBack, studentId }) => {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (studentId) fetchOrders();
+  }, [studentId]);
+
+  const fetchOrders = async (silent = false) => {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
+    try {
+      const res = await restaurantService.getOrdersByStudent(studentId);
+      setOrders(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const activeOrders = orders.filter(o => o.status !== 'Collected');
+  const pastOrders   = orders.filter(o => o.status === 'Collected');
+
+  return (
+    <div className="min-h-screen bg-paper/30 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b border-black/5 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-3 text-ink/40 hover:text-ink transition-colors group"
+          >
+            <div className="w-10 h-10 rounded-full bg-paper flex items-center justify-center group-hover:bg-ink group-hover:text-white transition-all">
+              <ArrowLeft size={20} />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-widest">Back to Cafes</span>
+          </button>
+          <h1 className="text-2xl font-serif text-ink">My Orders</h1>
+          <button
+            onClick={() => fetchOrders(true)}
+            className={`w-10 h-10 rounded-full bg-paper flex items-center justify-center text-ink/40 hover:text-ink hover:bg-gold/20 transition-all ${refreshing ? 'animate-spin' : ''}`}
+          >
+            <RefreshCw size={18} />
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-12 space-y-16">
+        {loading ? (
+          <div className="space-y-6">
+            {[1, 2].map(i => (
+              <div key={i} className="h-48 bg-white rounded-[2.5rem] animate-pulse border border-black/5" />
+            ))}
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="text-center py-24 bg-white rounded-[3rem] border border-black/5 shadow-xl">
+            <ShoppingBag size={52} className="text-ink/15 mx-auto mb-6" />
+            <h2 className="text-2xl font-serif text-ink mb-2">No orders yet</h2>
+            <p className="text-ink/40 text-sm">Head back to the cafes and place your first order!</p>
+            <button
+              onClick={onBack}
+              className="mt-8 px-10 py-4 bg-ink text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-300"
+            >
+              Browse Cafes
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Active Orders */}
+            {activeOrders.length > 0 && (
+              <section className="space-y-8">
+                <div className="flex items-center gap-3">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                  <h2 className="text-2xl font-serif text-ink">Active Orders</h2>
+                  <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-widest border border-emerald-100">{activeOrders.length}</span>
+                </div>
+                <div className="space-y-6">
+                  {activeOrders.map(order => (
+                    <OrderCard key={order._id || order.id} order={order} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Past Orders */}
+            {pastOrders.length > 0 && (
+              <section className="space-y-8">
+                <h2 className="text-2xl font-serif text-ink/50">Past Orders</h2>
+                <div className="space-y-6">
+                  {pastOrders.map(order => (
+                    <OrderCard key={order._id || order.id} order={order} isPast />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── Individual Order Card ───────────────────────────────────────────
+const OrderCard: React.FC<{ order: any; isPast?: boolean }> = ({ order, isPast = false }) => {
+  const currentStepIdx = STATUS_STEPS.indexOf(order.status);
+  const cfg = statusConfig[order.status] || statusConfig['Pending'];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`bg-white rounded-[2.5rem] border border-black/5 overflow-hidden shadow-xl transition-all duration-700 ${isPast ? 'opacity-70' : ''}`}
+    >
+      {/* Order Header */}
+      <div className="px-10 py-8 flex items-center justify-between border-b border-black/5">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/30">Order</p>
+          <h3 className="text-xl font-bold text-ink mt-1">#{(order._id || order.id)?.slice(-6).toUpperCase()}</h3>
+          <p className="text-xs text-ink/40 font-medium mt-1">{order.canteenName}</p>
+        </div>
+        <div className="text-right">
+          <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border ${cfg.bg} ${cfg.color}`}>
+            {cfg.icon}
+            {cfg.label}
+          </span>
+          <p className="text-xs text-ink/30 font-medium mt-2">
+            {order.createdAt ? new Date(order.createdAt).toLocaleString() : ''}
+          </p>
+        </div>
+      </div>
+
+      {/* Progress Timeline */}
+      {!isPast && (
+        <div className="px-10 py-8 border-b border-black/5">
+          <div className="flex items-center justify-between relative">
+            {/* Progress line */}
+            <div className="absolute top-5 left-0 right-0 h-0.5 bg-black/5" />
+            <div
+              className="absolute top-5 left-0 h-0.5 bg-emerald-400 transition-all duration-700"
+              style={{ width: `${(currentStepIdx / (STATUS_STEPS.length - 1)) * 100}%` }}
+            />
+            {STATUS_STEPS.map((step, idx) => {
+              const done = idx <= currentStepIdx;
+              const active = idx === currentStepIdx;
+              const stepCfg = statusConfig[step];
+              return (
+                <div key={step} className="relative flex flex-col items-center gap-2 z-10">
+                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
+                    done
+                      ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-200'
+                      : 'bg-white border-black/10 text-ink/20'
+                  } ${active ? 'scale-110 ring-4 ring-emerald-100' : ''}`}>
+                    {done ? <CheckCircle2 size={16} /> : stepCfg.icon}
+                  </div>
+                  <p className={`text-[9px] font-bold uppercase tracking-widest whitespace-nowrap ${done ? 'text-ink' : 'text-ink/25'}`}>
+                    {step === 'Pending' ? 'Received' : step === 'Preparing' ? 'Preparing' : step === 'Ready' ? 'Ready' : 'Collected'}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Order Items */}
+      <div className="px-10 py-8 space-y-6">
+        <div className="space-y-3">
+          {order.items?.map((item: any, idx: number) => (
+            <div key={idx} className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="w-6 h-6 rounded-full bg-paper text-ink text-[10px] font-bold flex items-center justify-center border border-black/5">
+                  {item.quantity}
+                </span>
+                <span className="text-sm font-medium text-ink">{item.name}</span>
+              </div>
+              <span className="text-sm font-bold text-ink">Rs. {item.price * item.quantity}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-between pt-6 border-t border-black/5">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Total Amount</div>
+          <div className="text-2xl font-serif text-gold font-bold">Rs. {order.totalPrice}</div>
+        </div>
+      </div>
+
+      {/* Status Message */}
+      {!isPast && (
+        <div className={`px-10 py-5 ${order.status === 'Ready' ? 'bg-emerald-50' : 'bg-paper/50'}`}>
+          <p className={`text-xs font-bold uppercase tracking-widest ${order.status === 'Ready' ? 'text-emerald-600' : 'text-ink/30'}`}>
+            {order.status === 'Pending'   && '🕐 Your order has been received. Waiting for cafe to accept…'}
+            {order.status === 'Preparing' && '👨‍🍳 The cafe is preparing your order right now!'}
+            {order.status === 'Ready'     && '🎉 Your order is ready! Head to the counter to collect it.'}
+          </p>
+        </div>
+      )}
+
+      {isPast && (
+        <div className="px-10 py-5 bg-paper/30">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-ink/25">✓ Collected — Thank you for ordering!</p>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+
+// ─── Order Countdown Overlay ─────────────────────────────────────────
+interface OrderCountdownOverlayProps {
+  orderData: any;
+  canteenName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+const COUNTDOWN_SECONDS = 6;
+
+const OrderCountdownOverlay: React.FC<OrderCountdownOverlayProps> = ({
+  orderData,
+  canteenName,
+  onConfirm,
+  onCancel,
+}) => {
+  const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
+  const [confirmed, setConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (confirmed) return;
+    if (secondsLeft === 0) {
+      setConfirmed(true);
+      onConfirm();
+      return;
+    }
+    const timer = setTimeout(() => setSecondsLeft(s => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [secondsLeft, confirmed]);
+
+  const handleSkip = () => {
+    if (confirmed) return;
+    setConfirmed(true);
+    onConfirm();
+  };
+
+  const handleCancel = () => {
+    setConfirmed(true);
+    onCancel();
+  };
+
+  const circumference = 2 * Math.PI * 44;
+  const dashOffset = circumference - (circumference * ((COUNTDOWN_SECONDS - secondsLeft) / COUNTDOWN_SECONDS));
+
+  return (
+    <div className="min-h-screen bg-ink/95 backdrop-blur-xl flex items-center justify-center p-6">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', duration: 0.6 }}
+        className="w-full max-w-lg"
+      >
+        <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl">
+
+          {/* Gold header strip */}
+          <div className="bg-gold px-10 py-6 flex items-center justify-between">
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-ink/50">Order Placed</p>
+              <h2 className="text-xl font-serif text-ink mt-0.5">{canteenName}</h2>
+            </div>
+            <ShoppingBag size={28} className="text-ink/30" />
+          </div>
+
+          <div className="px-10 py-10 space-y-10">
+
+            {/* Animated countdown ring */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative w-28 h-28">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="44" fill="none" stroke="#f0ede8" strokeWidth="8" />
+                  <circle
+                    cx="50" cy="50" r="44"
+                    fill="none"
+                    stroke={secondsLeft <= 2 ? '#ef4444' : '#c9a96e'}
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={dashOffset}
+                    style={{ transition: 'stroke-dashoffset 0.9s linear, stroke 0.3s' }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={secondsLeft}
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 1.4 }}
+                      transition={{ duration: 0.2 }}
+                      className={`text-4xl font-bold font-serif ${secondsLeft <= 2 ? 'text-red-500' : 'text-ink'}`}
+                    >
+                      {secondsLeft}
+                    </motion.span>
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              <div className="text-center space-y-1">
+                <p className="text-sm font-bold text-ink">Confirming your order…</p>
+                <p className="text-[10px] text-ink/40 font-bold uppercase tracking-widest">
+                  Order will be placed in{' '}
+                  <span className={secondsLeft <= 2 ? 'text-red-500' : 'text-gold'}>{secondsLeft}s</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Order summary */}
+            <div className="bg-paper/60 rounded-[2rem] p-6 border border-black/5 space-y-3">
+              {orderData.items?.map((item: any, idx: number) => (
+                <div key={idx} className="flex justify-between text-sm">
+                  <span className="text-ink/60 font-medium">{item.quantity}× {item.name}</span>
+                  <span className="font-bold text-ink">Rs. {item.price * item.quantity}</span>
+                </div>
+              ))}
+              <div className="flex justify-between pt-3 border-t border-black/5">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Total</span>
+                <span className="font-bold text-gold text-base">Rs. {orderData.totalPrice}</span>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-4">
+              <button
+                onClick={handleCancel}
+                className="flex-1 flex flex-col items-center justify-center gap-1.5 py-5 rounded-2xl border-2 border-red-100 bg-red-50 text-red-600 hover:bg-red-100 hover:border-red-200 transition-all"
+              >
+                <span className="text-xl font-bold">✕</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest">Cancel Order</span>
+                <span className="text-[8px] text-red-400 font-medium">Return to checkout</span>
+              </button>
+
+              <button
+                onClick={handleSkip}
+                className="flex-1 flex flex-col items-center justify-center gap-1.5 py-5 rounded-2xl bg-ink text-white hover:bg-gold transition-all group"
+              >
+                <ChevronRight size={22} className="transition-transform group-hover:translate-x-1" />
+                <span className="text-[9px] font-bold uppercase tracking-widest">Place Now</span>
+                <span className="text-[8px] text-white/40 font-medium">Skip the countdown</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };

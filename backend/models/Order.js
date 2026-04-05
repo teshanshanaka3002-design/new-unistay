@@ -16,6 +16,7 @@ const orderSchema = new mongoose.Schema({
     studentYear: { type: String, required: true },
     studentIdNumber: { type: String, required: true },
     studentPhone: { type: String, required: true },
+    identityProof: { type: String },
     items: [orderItemSchema],
     totalPrice: { type: Number, required: true },
     pickupTime: { type: Date, required: true },
