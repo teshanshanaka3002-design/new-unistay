@@ -134,169 +134,8 @@ const UnifiedReview = mongoose.model('UnifiedReview', unifiedReviewSchema);
 
 let isMongoConnected = false;
 
-// --- Mock Data for Fallback ---
-const MOCK_ACCOMMODATIONS = [
-  { 
-    _id: 'acc-1',
-    name: 'SLIIT Green Residence', 
-    description: 'Modern student housing located just minutes away from SLIIT campus. Features high-speed internet, 24/7 security, and a vibrant student community. Perfect for those looking for a balanced study-life environment.',
-    price: 25000, 
-    rating: 4.8, 
-    city: 'Malabe', 
-    location: '123 University Ave',
-    university: 'SLIIT',
-    image: 'https://picsum.photos/seed/acc1/800/600',
-    images: [
-      'https://picsum.photos/seed/acc1/800/600',
-      'https://picsum.photos/seed/room1/800/600',
-      'https://picsum.photos/seed/bath1/800/600'
-    ],
-    roomType: 'Single Room',
-    propertyType: 'Boarding House',
-    facilities: ['WiFi', 'Air Conditioning', 'Attached Bathroom', 'Parking', 'CCTV Security'],
-    genderPreference: 'Mixed',
-    ownerName: 'Sunil Perera',
-    ownerPhone: '+94 77 123 4567',
-    reviews: [
-      { userName: 'Amali', rating: 5, comment: 'Great place, very close to campus!', date: new Date('2026-02-15') },
-      { userName: 'Kasun', rating: 4, comment: 'Clean and quiet, perfect for studying.', date: new Date('2026-03-01') }
-    ]
-  },
-  { 
-    _id: 'acc-2',
-    name: 'Kaduwela Student Inn', 
-    description: 'Affordable and cozy shared rooms in the heart of Kaduwela. Ideal for students on a budget who still want quality living conditions. Includes basic utilities and common study areas.',
-    price: 18500, 
-    rating: 4.5, 
-    city: 'Kaduwela', 
-    location: '45 Main St',
-    university: 'SAITM',
-    image: 'https://picsum.photos/seed/acc2/800/600',
-    images: [
-      'https://picsum.photos/seed/acc2/800/600',
-      'https://picsum.photos/seed/room2/800/600'
-    ],
-    roomType: 'Shared Room',
-    propertyType: 'Hostel',
-    facilities: ['WiFi', 'Parking', 'Meals Included', 'Laundry'],
-    genderPreference: 'Male',
-    ownerName: 'Nimal Silva',
-    ownerPhone: '+94 71 987 6543',
-    reviews: [
-      { userName: 'Dilshan', rating: 4, comment: 'Good value for money.', date: new Date('2026-01-20') }
-    ]
-  },
-  { 
-    _id: 'acc-3',
-    name: 'NSBM Premium Annex', 
-    description: 'High-end annex for NSBM students. Features premium furniture, private kitchen, and high-speed fiber internet. Located in a quiet residential area of Pitipana.',
-    price: 45000, 
-    rating: 4.9, 
-    city: 'Homagama', 
-    location: 'Pitipana North',
-    university: 'NSBM',
-    image: 'https://picsum.photos/seed/acc3/800/600',
-    images: [
-      'https://picsum.photos/seed/acc3/800/600',
-      'https://picsum.photos/seed/room3/800/600'
-    ],
-    roomType: 'Single Room',
-    propertyType: 'Annex',
-    facilities: ['WiFi', 'Air Conditioning', 'Attached Bathroom', 'Kitchen Access', '24/7 Water & Electricity'],
-    genderPreference: 'Female',
-    ownerName: 'Kamala Devi',
-    ownerPhone: '+94 77 555 1234',
-    reviews: [
-      { userName: 'Sithmi', rating: 5, comment: 'Very safe and comfortable.', date: new Date('2026-03-10') }
-    ]
-  },
-  { 
-    _id: 'acc-4',
-    name: 'Moratuwa Scholars Hostel', 
-    description: 'Standard hostel for UoM students. Walking distance to the university. Great for those who want to be close to campus activities.',
-    price: 12000, 
-    rating: 4.2, 
-    city: 'Moratuwa', 
-    location: 'Katubedda',
-    university: 'University of Moratuwa',
-    image: 'https://picsum.photos/seed/acc4/800/600',
-    images: [
-      'https://picsum.photos/seed/acc4/800/600'
-    ],
-    roomType: 'Shared Room',
-    propertyType: 'Hostel',
-    facilities: ['WiFi', 'Study Desk', '24/7 Water & Electricity'],
-    genderPreference: 'Mixed',
-    ownerName: 'Bandara',
-    ownerPhone: '+94 71 222 3333',
-    reviews: []
-  }
-];
-
-const MOCK_CANTEENS = [
-  {
-    _id: 'cant-1',
-    name: 'P&S Cafe',
-    location: 'Block A, Ground Floor',
-    university: 'SLIIT',
-    rating: 4.8,
-    description: 'Fresh pastries, sandwiches, and premium coffee for SLIIT students.',
-    image: 'https://picsum.photos/seed/pscafe/800/600'
-  },
-  {
-    _id: 'cant-2',
-    name: 'Basement Canteen',
-    location: 'Main Building, Basement',
-    university: 'SLIIT',
-    rating: 4.2,
-    description: 'Affordable and hearty local meals, perfect for a quick lunch break.',
-    image: 'https://picsum.photos/seed/basement/800/600'
-  },
-  {
-    _id: 'cant-3',
-    name: 'NSBM Food Court',
-    location: 'NSBM Green University, Level 1',
-    university: 'NSBM',
-    rating: 4.5,
-    description: 'A wide variety of cuisines from around the world in a modern setting.',
-    image: 'https://picsum.photos/seed/nsbmfood/800/600'
-  },
-  {
-    _id: 'cant-4',
-    name: 'IIT Hub',
-    location: 'IIT Campus, Level 3',
-    university: 'IIT',
-    rating: 4.6,
-    description: 'The central hub for food and socializing at IIT.',
-    image: 'https://picsum.photos/seed/iithub/800/600'
-  },
-  {
-    _id: 'cant-5',
-    name: 'CINEC Galley',
-    location: 'CINEC Campus, Ground Floor',
-    university: 'CINEC',
-    rating: 4.3,
-    description: 'Quality meals for maritime and engineering students.',
-    image: 'https://picsum.photos/seed/cinecgalley/800/600'
-  }
-];
-
-const MOCK_MENU_ITEMS = [
-  // SLIIT P&S Cafe
-  { _id: 'm1', canteenId: 'cant-1', name: 'Chicken Puff', description: 'Flaky pastry filled with spicy chicken.', price: 120, category: 'Snacks', image: 'https://picsum.photos/seed/puff/400/300' },
-  { _id: 'm2', canteenId: 'cant-1', name: 'Iced Coffee', description: 'Chilled premium coffee with milk.', price: 250, category: 'Beverages', image: 'https://picsum.photos/seed/icedcoffee/400/300' },
-  { _id: 'm3', canteenId: 'cant-1', name: 'Club Sandwich', description: 'Classic club sandwich with fries.', price: 450, category: 'Fast Food', image: 'https://picsum.photos/seed/clubsandwich/400/300' },
-  
-  // SLIIT Basement Canteen
-  { _id: 'm4', canteenId: 'cant-2', name: 'Chicken Rice & Curry', description: 'Traditional Sri Lankan rice and curry.', price: 350, category: 'Rice & Curry', image: 'https://picsum.photos/seed/ricecurry/400/300' },
-  { _id: 'm5', canteenId: 'cant-2', name: 'Egg Kottu', description: 'Popular Sri Lankan street food.', price: 400, category: 'Fast Food', image: 'https://picsum.photos/seed/kottu/400/300' },
-  
-  // NSBM Food Court
-  { _id: 'm6', canteenId: 'cant-3', name: 'Beef Burger', description: 'Juicy beef patty with cheese and veggies.', price: 650, category: 'Fast Food', image: 'https://picsum.photos/seed/burger/400/300' },
-  { _id: 'm7', canteenId: 'cant-3', name: 'Mixed Fried Rice', description: 'Fried rice with chicken, beef, and prawns.', price: 550, category: 'Rice & Curry', image: 'https://picsum.photos/seed/friedrice/400/300' },
-  { _id: 'm8', canteenId: 'cant-3', name: 'Fruit Juice', description: 'Freshly squeezed seasonal fruit juice.', price: 200, category: 'Beverages', image: 'https://picsum.photos/seed/juice/400/300' }
-];
-
+const MOCK_MENU_ITEMS: any[] = [];
+const MOCK_CANTEENS: any[] = [];
 let MOCK_ORDERS: any[] = [];
 let MOCK_BOOKINGS: any[] = [];
 
@@ -310,39 +149,8 @@ async function startServer() {
   const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/unistay";
   try {
     await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
-    console.log("Connected to MongoDB");
+    console.log("✅ MongoDB Connected");
     isMongoConnected = true;
-
-    // Seed data if empty
-    const accCount = await Accommodation.countDocuments();
-    if (accCount === 0) {
-      await Accommodation.insertMany(MOCK_ACCOMMODATIONS.map(a => {
-        const { _id, ...rest } = a;
-        return rest;
-      }));
-
-      const savedCanteens = await Canteen.insertMany(MOCK_CANTEENS.map(c => {
-        const { _id, ...rest } = c;
-        return rest;
-      }));
-
-      const initialMenuItems = [
-        // SLIIT P&S Cafe
-        { canteenId: savedCanteens[0]._id, name: 'Chicken Puff', description: 'Flaky pastry filled with spicy chicken.', price: 120, category: 'Snacks', image: 'https://picsum.photos/seed/puff/400/300' },
-        { canteenId: savedCanteens[0]._id, name: 'Iced Coffee', description: 'Chilled premium coffee with milk.', price: 250, category: 'Beverages', image: 'https://picsum.photos/seed/icedcoffee/400/300' },
-        { canteenId: savedCanteens[0]._id, name: 'Club Sandwich', description: 'Classic club sandwich with fries.', price: 450, category: 'Fast Food', image: 'https://picsum.photos/seed/clubsandwich/400/300' },
-        
-        // SLIIT Basement Canteen
-        { canteenId: savedCanteens[1]._id, name: 'Chicken Rice & Curry', description: 'Traditional Sri Lankan rice and curry.', price: 350, category: 'Rice & Curry', image: 'https://picsum.photos/seed/ricecurry/400/300' },
-        { canteenId: savedCanteens[1]._id, name: 'Egg Kottu', description: 'Popular Sri Lankan street food.', price: 400, category: 'Fast Food', image: 'https://picsum.photos/seed/kottu/400/300' },
-        
-        // NSBM Food Court
-        { canteenId: savedCanteens[2]._id, name: 'Beef Burger', description: 'Juicy beef patty with cheese and veggies.', price: 650, category: 'Fast Food', image: 'https://picsum.photos/seed/burger/400/300' },
-        { canteenId: savedCanteens[2]._id, name: 'Mixed Fried Rice', description: 'Fried rice with chicken, beef, and prawns.', price: 550, category: 'Rice & Curry', image: 'https://picsum.photos/seed/friedrice/400/300' },
-        { canteenId: savedCanteens[2]._id, name: 'Fruit Juice', description: 'Freshly squeezed seasonal fruit juice.', price: 200, category: 'Beverages', image: 'https://picsum.photos/seed/juice/400/300' }
-      ];
-      await MenuItem.insertMany(initialMenuItems);
-    }
   } catch (err) {
     console.error("MongoDB connection error (falling back to mock data):", err);
     isMongoConnected = false;
@@ -538,28 +346,7 @@ async function startServer() {
         const accs = await Accommodation.find(query);
         res.json(accs);
       } else {
-        let filtered = [...MOCK_ACCOMMODATIONS];
-        if (location) {
-          filtered = filtered.filter(a => a.city.toLowerCase().includes((location as string).toLowerCase()));
-        }
-        if (university) {
-          filtered = filtered.filter(a => a.university === university);
-        }
-        if (minPrice) {
-          filtered = filtered.filter(a => a.price >= Number(minPrice));
-        }
-        if (maxPrice) {
-          filtered = filtered.filter(a => a.price <= Number(maxPrice));
-        }
-        if (roomType) {
-          const types = (roomType as string).split(',');
-          filtered = filtered.filter(a => types.includes(a.roomType));
-        }
-        if (facilities) {
-          const facs = (facilities as string).split(',');
-          filtered = filtered.filter(a => facs.every(f => a.facilities.includes(f)));
-        }
-        res.json(filtered);
+        res.json([]);
       }
     } catch (err) {
       console.error("Fetch accommodations error:", err);
@@ -574,9 +361,7 @@ async function startServer() {
         if (acc) res.json(acc);
         else res.status(404).json({ error: "Not found" });
       } else {
-        const acc = MOCK_ACCOMMODATIONS.find(a => a._id === req.params.id);
-        if (acc) res.json(acc);
-        else res.status(404).json({ error: "Not found" });
+        res.status(404).json({ error: "Not found" });
       }
     } catch (err) {
       res.status(500).json({ error: "Server error" });
