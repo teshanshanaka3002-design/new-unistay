@@ -60,7 +60,9 @@ import {
 import { MapSection } from '../components/MapSection';
 import { RequestSystem } from '../components/requests/RequestSystem';
 import Chatbot from '../components/Chatbot';
-import { adminService, reportService } from '../services/api';
+import { adminService, reportService, reviewService } from '../services/api';
+import { ReviewModal } from '../components/reviews/ReviewModal';
+import { RatingStars } from '../components/reviews/RatingStars';
 
 // --- Student Dashboard ---
 export const StudentDashboard: React.FC = () => {
@@ -69,6 +71,8 @@ export const StudentDashboard: React.FC = () => {
 
   const [slides, setSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   const defaultSlides = [
     {
@@ -87,6 +91,7 @@ export const StudentDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchHero();
+    fetchReviews();
   }, []);
 
   const fetchHero = async () => {
@@ -102,6 +107,28 @@ export const StudentDashboard: React.FC = () => {
       setSlides(defaultSlides);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const res = await reviewService.getReviewsByTarget('WEBSITE');
+      setReviews(res.data);
+    } catch (err) {
+      console.error('Failed to fetch website reviews', err);
+    }
+  };
+
+  const handleReviewSubmit = async (data: any) => {
+    try {
+      await reviewService.submitReview({
+        type: 'WEBSITE',
+        rating: data.rating,
+        comment: data.comment
+      });
+      fetchReviews();
+    } catch (err) {
+      console.error('Failed to submit review', err);
     }
   };
 
@@ -279,75 +306,89 @@ export const StudentDashboard: React.FC = () => {
       {/* Reviews Section */}
       <section className="px-6 md:px-12 max-w-7xl mx-auto">
         <div className="space-y-20">
-          <div className="text-center space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold"
+          <div className="flex flex-col md:flex-row justify-between items-end gap-8">
+            <div className="space-y-6 text-left">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold"
+              >
+                Platform Feedback
+              </motion.div>
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="text-5xl md:text-7xl font-serif text-ink"
+              >
+                What students <br />
+                <span className="italic text-gold">say about us.</span>
+              </motion.h2>
+            </div>
+            <Button 
+              className="rounded-full px-10 h-14 bg-ink text-gold shadow-2xl hover:scale-105 transition-all text-[10px] font-bold uppercase tracking-widest gap-3"
+              onClick={() => setIsReviewModalOpen(true)}
             >
-              Student Testimonials
-            </motion.div>
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-5xl md:text-7xl font-serif text-ink"
-            >
-              What students <br />
-              <span className="italic text-gold">say about us.</span>
-            </motion.h2>
+              <MessageSquare size={18} />
+              Share Your Experience
+            </Button>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                text: "StudentNest made finding a boarding house so much easier. The verification process gives me peace of mind as an international student.",
-                author: "Sarah Johnson",
-                uni: "SLIIT",
-                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150"
-              },
-              {
-                text: "The meal menu feature is a lifesaver! I can check what's available before even leaving my lecture and skip the long queues.",
-                author: "Jason Perera",
-                uni: "NSBM",
-                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150"
-              },
-              {
-                text: "The community aspect is great. I found my current roommate through the requests system. It's safe and very user-friendly.",
-                author: "Amali Silva",
-                uni: "IIT",
-                avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150"
-              }
-            ].map((review, i) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {reviews.length > 0 ? reviews.slice(0, 6).map((review, i) => (
               <motion.div
-                key={`testimonial-${i}`}
+                key={review._id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="p-10 rounded-[3rem] bg-white border border-black/5 space-y-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group"
+                className="p-10 rounded-[3rem] bg-white border border-black/5 space-y-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative flex flex-col justify-between overflow-hidden"
               >
-                <div className="flex gap-1 text-gold">
-                  {[...Array(5)].map((_, starIdx) => (
-                    <Star key={`star-${i}-${starIdx}`} size={16} fill="currentColor" />
-                  ))}
-                </div>
-                <p className="text-lg text-ink/60 leading-relaxed italic">
-                  "{review.text}"
-                </p>
-                <div className="flex items-center gap-4 pt-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gold/20 group-hover:border-gold transition-colors duration-500">
-                    <img src={review.avatar} alt={review.author} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <Globe size={150} className="absolute -right-12 -bottom-12 text-black/[0.02] -rotate-12 pointer-events-none" />
+                
+                <div className="space-y-8 relative z-10">
+                  <div className="flex justify-between items-start">
+                    <RatingStars rating={review.rating} size={14} />
+                    <Badge variant="outline" className="border-black/5 text-[8px] font-bold opacity-30">{new Date(review.createdAt).toLocaleDateString()}</Badge>
                   </div>
-                  <div>
-                    <div className="text-sm font-bold text-ink">{review.author}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-ink/30">{review.uni}</div>
+                  
+                  <p className="text-lg text-ink/70 leading-relaxed italic line-clamp-4">
+                    "{review.comment}"
+                  </p>
+                </div>
+
+                <div className="space-y-6 relative z-10">
+                  {review.adminReply && (
+                    <div className="p-5 rounded-2xl bg-gold/5 border border-gold/10 space-y-2">
+                       <p className="text-[8px] font-black uppercase tracking-widest text-gold flex items-center gap-2">
+                          <MessageCircle size={10} /> Official Host Reply
+                       </p>
+                       <p className="text-[11px] text-ink/60 italic leading-relaxed">"{review.adminReply}"</p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-4 pt-4 border-t border-black/5">
+                    <div className="w-12 h-12 rounded-full bg-ink text-gold flex items-center justify-center font-serif text-lg shadow-xl shadow-ink/10">
+                      {review.userName[0]}
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-ink">{review.userName}</div>
+                      <div className="text-[9px] font-bold uppercase tracking-widest text-ink/30 italic">Verified Student</div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
-            ))}
+            )) : (
+              [1, 2, 3].map((_, i) => (
+                <div key={i} className="p-10 rounded-[3rem] bg-paper/50 border border-dashed border-black/10 animate-pulse h-[350px] flex flex-col items-center justify-center text-center gap-4">
+                   <div className="w-12 h-12 rounded-full bg-black/5" />
+                   <div className="h-4 w-32 bg-black/5 rounded-full" />
+                   <div className="h-2 w-48 bg-black/5 rounded-full" />
+                </div>
+              ))
+            )}
           </div>
 
           <div className="flex justify-end">
@@ -365,6 +406,13 @@ export const StudentDashboard: React.FC = () => {
             </motion.button>
           </div>
         </div>
+
+        <ReviewModal 
+          isOpen={isReviewModalOpen}
+          onClose={() => setIsReviewModalOpen(false)}
+          onSubmit={handleReviewSubmit}
+          title="How's your experience with StudentNest?"
+        />
       </section>
 
       {/* FAQ & Support Section */}

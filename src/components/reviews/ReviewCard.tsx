@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, CheckCircle2 } from 'lucide-react';
+import { Star, CheckCircle2, MessageCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Card } from '../UI';
 import { RatingStars } from './RatingStars';

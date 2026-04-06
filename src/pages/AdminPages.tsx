@@ -3,10 +3,10 @@ import {
   Users, Building2, Utensils, ShoppingBag, Star, TrendingUp, 
   ShieldAlert, UserX, AlertTriangle, Image as ImageIcon, Plus, 
   Trash2, ExternalLink, LayoutDashboard, Settings, LogOut, Search,
-  ChevronRight
+  ChevronRight, MessageCircle, MoreHorizontal, Reply, StarOff, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { adminService } from '../services/api';
+import { adminService, reviewService } from '../services/api';
 import { Card, Button, Input, Modal, Badge } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -682,4 +682,266 @@ export const AdminReportsManager: React.FC = () => {
       </Modal>
     </div>
   );
+};
+
+// --- Reviews and Ratings Manager ---
+export const AdminReviewsManager: React.FC = () => {
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'WEBSITE' | 'STAY' | 'MEAL'>('WEBSITE');
+    const [selectedReview, setSelectedReview] = useState<any>(null);
+    const [replyText, setReplyText] = useState('');
+    const [isReplying, setIsReplying] = useState(false);
+
+    useEffect(() => {
+        fetchReviews();
+    }, []);
+
+    const fetchReviews = async () => {
+        try {
+            setLoading(true);
+            const res = await reviewService.getAllReviews();
+            setReviews(res.data);
+        } catch (err) {
+            console.error('Failed to fetch reviews', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this review? This action cannot be undone.')) return;
+        try {
+            await reviewService.deleteReview(id);
+            fetchReviews();
+            if (selectedReview?._id === id) setSelectedReview(null);
+        } catch (err) {
+            alert('Failed to delete review');
+        }
+    };
+
+    const handleReply = async () => {
+        if (!replyText.trim()) return;
+        try {
+            setIsReplying(true);
+            await reviewService.replyToReview(selectedReview._id, replyText);
+            setReplyText('');
+            setSelectedReview(null);
+            fetchReviews();
+            alert('Reply sent successfully');
+        } catch (err) {
+            alert('Failed to send reply');
+        } finally {
+            setIsReplying(false);
+        }
+    };
+
+    const filteredAndSortedReviews = (list: any[]) => {
+        return [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    const filteredReviewsList = filteredAndSortedReviews(reviews.filter(r => r.type === activeTab));
+
+    const getCategoryLabel = (type: string) => {
+        switch (type) {
+            case 'STAY': return 'Accommodation';
+            case 'MEAL': return 'Restaurant/Canteen';
+            case 'WEBSITE': return 'Platform Feedback';
+            default: return type;
+        }
+    }
+
+    return (
+        <div className="p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex justify-between items-center text-white p-12 rounded-[3.5rem] bg-gradient-to-br from-gold to-amber-600 shadow-2xl relative overflow-hidden">
+                <div className="relative z-10">
+                    <h1 className="text-5xl font-serif">Reviews Manager</h1>
+                    <p className="text-white/80 font-medium mt-4 max-w-lg">Monitor platform reputation and engage with student feedback across all services.</p>
+                </div>
+                <Star size={300} className="absolute -right-24 -bottom-24 text-white/10 -rotate-12" />
+            </div>
+
+            {/* Category Tabs */}
+            <div className="flex gap-4 p-2 bg-paper/50 rounded-full border border-black/5 w-fit">
+                {[
+                    { id: 'WEBSITE', label: 'Website', icon: Globe },
+                    { id: 'STAY', label: 'Stays', icon: Building2 },
+                    { id: 'MEAL', label: 'Meals', icon: Utensils }
+                ].map((tab: any) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={cn(
+                            "flex items-center gap-3 px-8 py-4 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all",
+                            activeTab === tab.id
+                                ? "bg-ink text-gold shadow-xl"
+                                : "text-ink/40 hover:text-ink hover:bg-white"
+                        )}
+                    >
+                        <tab.icon size={16} />
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {loading ? (
+                    Array(6).fill(0).map((_, i) => (
+                        <div key={i} className="h-64 rounded-[2.5rem] bg-paper/50 animate-pulse border border-black/5" />
+                    ))
+                ) : filteredReviewsList.length > 0 ? filteredReviewsList.map((review, idx) => (
+                    <motion.div
+                        key={review._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                    >
+                        <Card className="p-8 rounded-[2.5rem] border-black/5 bg-white hover:shadow-2xl transition-all group flex flex-col justify-between h-full">
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-ink text-gold flex items-center justify-center font-serif text-sm">
+                                            {review.userName[0]}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-ink text-xs uppercase tracking-widest">{review.userName}</p>
+                                            <p className="text-[9px] text-ink/30 font-bold uppercase tracking-tight">{new Date(review.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-1 text-gold">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} size={10} fill={i < review.rating ? "currentColor" : "none"} className={i < review.rating ? "" : "text-black/5"} />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="relative">
+                                    <p className="text-ink/70 text-sm leading-relaxed italic line-clamp-3">
+                                        "{review.comment}"
+                                    </p>
+                                </div>
+
+                                {review.adminReply && (
+                                    <div className="p-4 rounded-2xl bg-gold/5 border border-gold/10 space-y-2">
+                                        <p className="text-[8px] font-black uppercase tracking-widest text-gold flex items-center gap-2">
+                                            <Reply size={10} /> Reply from {review.adminName}
+                                        </p>
+                                        <p className="text-[11px] text-ink/60 leading-relaxed italic line-clamp-2">"{review.adminReply}"</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-2 pt-6 mt-auto">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1 rounded-xl text-[9px] font-bold uppercase tracking-widest border-black/5 hover:bg-paper"
+                                    onClick={() => {
+                                        setSelectedReview(review);
+                                        setIsReplying(false);
+                                        setReplyText('');
+                                    }}
+                                >
+                                    Details
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-11 rounded-xl border-rose-100 text-rose-500 hover:bg-rose-50"
+                                    onClick={() => handleDelete(review._id)}
+                                >
+                                    <Trash2 size={14} />
+                                </Button>
+                            </div>
+                        </Card>
+                    </motion.div>
+                )) : (
+                    <div className="col-span-full py-24 text-center space-y-4">
+                        <MessageCircle size={48} className="text-ink/10 mx-auto" />
+                        <p className="text-sm text-ink/40 font-medium italic">No reviews found for this category.</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Review Detail & Reply Modal */}
+            <Modal
+                isOpen={!!selectedReview}
+                onClose={() => setSelectedReview(null)}
+                title={`${getCategoryLabel(selectedReview?.type)} Review`}
+                maxWidth="lg"
+            >
+                {selectedReview && (
+                    <div className="space-y-10 p-2">
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-full bg-ink text-gold flex items-center justify-center font-serif text-xl shadow-lg">
+                                        {selectedReview.userName[0]}
+                                    </div>
+                                    <div>
+                                        <p className="text-lg font-serif text-ink">{selectedReview.userName}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30 italic">Verified Student</p>
+                                    </div>
+                                </div>
+                                <Badge className="bg-gold text-ink border-none text-[10px] font-black px-4">{selectedReview.rating} / 5.0</Badge>
+                            </div>
+
+                            <div className="p-8 rounded-[2.5rem] bg-paper/50 border border-black/5 relative">
+                                <p className="text-lg text-ink/60 leading-relaxed italic">"{selectedReview.comment}"</p>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-ink/20 mt-6 text-right">Submitted at {new Date(selectedReview.createdAt).toLocaleString()}</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-ink/30 ml-4">Administrative Response</h4>
+
+                            {selectedReview.adminReply && !isReplying ? (
+                                <div className="space-y-4">
+                                    <div className="p-8 rounded-[2rem] bg-gold/5 border border-gold/20 italic">
+                                        <p className="text-sm text-ink/70">"{selectedReview.adminReply}"</p>
+                                        <div className="flex justify-between items-end mt-4">
+                                            <p className="text-[9px] font-bold uppercase tracking-widest text-gold font-sans">Replied by {selectedReview.adminName}</p>
+                                            <p className="text-[9px] font-medium text-ink/20 font-sans">{new Date(selectedReview.replyDate).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        className="text-[9px] font-bold uppercase tracking-widest text-ink/30 hover:text-ink"
+                                        onClick={() => {
+                                            setReplyText(selectedReview.adminReply);
+                                            setIsReplying(true);
+                                        }}
+                                    >
+                                        Edit Reply
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <textarea
+                                        value={replyText}
+                                        onChange={(e) => setReplyText(e.target.value)}
+                                        placeholder="Write your response to the student..."
+                                        className="w-full p-6 bg-paper rounded-[2rem] border border-black/5 text-sm min-h-[150px] focus:outline-none focus:ring-2 focus:ring-gold transition-all"
+                                    />
+                                    <div className="flex justify-end gap-3 transition-all animate-in fade-in slide-in-from-top-2">
+                                        {selectedReview.adminReply && (
+                                            <Button variant="outline" onClick={() => setIsReplying(false)}>Cancel Edit</Button>
+                                        )}
+                                        <Button
+                                            className="bg-ink text-gold rounded-full px-8 shadow-xl shadow-ink/20"
+                                            onClick={handleReply}
+                                            isLoading={isReplying}
+                                            disabled={!replyText.trim()}
+                                        >
+                                            {selectedReview.adminReply ? 'Update Reply' : 'Publish Reply'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </Modal>
+        </div>
+    );
 };

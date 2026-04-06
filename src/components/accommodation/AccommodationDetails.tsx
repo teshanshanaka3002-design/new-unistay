@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Star, MapPin, Home, ShieldCheck, Check, 
   Phone, MessageSquare, ArrowLeft, Calendar, 
   Wifi, Wind, Bath, Car, Utensils, Info,
   Share2, Heart, ChevronRight, ChevronLeft,
-  Plus
+  Plus, RefreshCw
 } from 'lucide-react';
 import { Card, Button, Badge } from '../UI';
 import { Accommodation } from '../../types/accommodation';
@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { RatingSummary } from '../reviews/RatingSummary';
 import { ReviewList } from '../reviews/ReviewList';
 import { ReviewModal } from '../reviews/ReviewModal';
+import { reviewService } from '../../services/api';
 
 interface AccommodationDetailsProps {
   accommodation: Accommodation;
@@ -24,6 +25,38 @@ interface AccommodationDetailsProps {
 export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ accommodation, onBack, onBook, onContact }) => {
   const [activeImage, setActiveImage] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [accommodation._id]);
+
+  const fetchReviews = async () => {
+    try {
+      setLoadingReviews(true);
+      const res = await reviewService.getReviewsByTarget('STAY', accommodation._id);
+      setReviews(res.data);
+    } catch (err) {
+      console.error('Failed to fetch reviews', err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleReviewSubmit = async (data: any) => {
+    try {
+      await reviewService.submitReview({
+        type: 'STAY',
+        targetId: accommodation._id,
+        rating: data.rating,
+        comment: data.comment
+      });
+      fetchReviews();
+    } catch (err) {
+      console.error('Failed to submit review', err);
+    }
+  };
 
   const getFacilityIcon = (facility: string) => {
     switch (facility.toLowerCase()) {
@@ -37,11 +70,26 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
   };
 
   // Calculate breakdown for RatingSummary
-  const breakdown = accommodation.reviews?.reduce((acc, review) => {
+  const breakdown = reviews.reduce((acc, review) => {
     const rating = Math.round(review.rating);
     acc[rating] = (acc[rating] || 0) + 1;
     return acc;
-  }, {} as { [key: number]: number }) || {};
+  }, {} as { [key: number]: number });
+
+  const avgRating = reviews.length > 0 
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+    : 0;
+
+  const mappedReviews = reviews.map(r => ({
+    id: r._id,
+    userName: r.userName,
+    rating: r.rating,
+    comment: r.comment,
+    date: new Date(r.createdAt).toLocaleDateString(),
+    isVerified: true,
+    adminReply: r.adminReply,
+    adminName: r.adminName
+  }));
 
   const displayImages = (accommodation.images && accommodation.images.length > 0) 
     ? accommodation.images 
@@ -57,12 +105,8 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
       <ReviewModal 
         isOpen={isReviewModalOpen}
         onClose={() => setIsReviewModalOpen(false)}
-        onSubmit={(review) => {
-          console.log('New Review:', review);
-          // In a real app, we would update the state or call an API
-        }}
-        title="Rate Your Stay"
-        categories={['Cleanliness', 'Safety', 'Facilities', 'Location']}
+        onSubmit={handleReviewSubmit}
+        title={`Rate your stay at ${accommodation.name}`}
       />
 
       {/* Navigation & Actions */}
@@ -98,7 +142,7 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
               />
               <div className="absolute top-8 right-8 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-ink flex items-center gap-2 shadow-xl border border-white/20">
                 <Star size={14} className="text-gold fill-gold" />
-                {accommodation.rating} <span className="text-ink/40 font-medium">({accommodation.reviews.length} reviews)</span>
+                {avgRating > 0 ? avgRating.toFixed(1) : 'No ratings'} <span className="text-ink/40 font-medium">({reviews.length} reviews)</span>
               </div>
               
               {/* Gallery Navigation */}
@@ -249,14 +293,20 @@ export const AccommodationDetails: React.FC<AccommodationDetailsProps> = ({ acco
 
             {/* Rating Summary */}
             <RatingSummary 
-              averageRating={accommodation.rating}
-              totalReviews={accommodation.reviews?.length || 0}
+              averageRating={avgRating}
+              totalReviews={reviews.length}
               breakdown={breakdown}
               className="p-12 rounded-[3rem] bg-paper/20 border border-black/5"
             />
 
             {/* Review List */}
-            <ReviewList reviews={accommodation.reviews || []} />
+            {loadingReviews ? (
+              <div className="flex justify-center py-20">
+                <RefreshCw className="animate-spin text-gold" size={32} />
+              </div>
+            ) : (
+              <ReviewList reviews={mappedReviews} />
+            )}
           </div>
         </div>
 

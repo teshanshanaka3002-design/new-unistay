@@ -102,3 +102,15 @@ export const reportService = {
   submitReport: (data: any) => api.post('/reports/submit', data),
   getStudentReports: () => api.get('/reports/my-reports'),
 };
+
+export const reviewService = {
+  submitReview: (data: { type: 'WEBSITE' | 'STAY' | 'MEAL', targetId?: string, rating: number, comment: string }) => 
+    api.post('/reviews', data),
+  getReviewsByTarget: (type: string, id?: string) => 
+    api.get(`/reviews/target/${type}${id ? `/${id}` : ''}`),
+  // Admin only
+  getAllReviews: () => api.get('/reviews/admin/all'),
+  replyToReview: (id: string, message: string) => 
+    api.post(`/reviews/admin/reply/${id}`, { message }),
+  deleteReview: (id: string) => api.delete(`/reviews/admin/${id}`),
+};

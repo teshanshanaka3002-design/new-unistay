@@ -69,6 +69,7 @@ const navItems: NavItem[] = [
   { label: 'User Management', path: '/admin/users', icon: <Users size={20} />, roles: ['ADMIN'] },
   { label: 'Hero Studio', path: '/admin/content', icon: <ImageIcon size={20} />, roles: ['ADMIN'] },
   { label: 'Student Issues', path: '/admin/issues', icon: <AlertTriangle size={20} />, roles: ['ADMIN'] },
+  { label: 'Reviews Manager', path: '/admin/reviews', icon: <MessageSquare size={20} />, roles: ['ADMIN'] },
   { label: 'System Profile', path: '/profile', icon: <User size={20} />, roles: ['ADMIN'] },
 ];
 

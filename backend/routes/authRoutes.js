@@ -35,11 +35,15 @@ router.post("/login", async (req, res) => {
         }
 
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ error: "Invalid credentials" });
+        if (!user) {
+            console.log(`❌ Login Failed: User not found for email ${email}`);
+            return res.status(400).json({ error: "Invalid credentials" });
+        }
 
         // Fallback for plaintext test users we created earlier:
         const isMatch = await bcrypt.compare(password, user.password).catch(() => false);
         if (!isMatch && password !== user.password) {
+            console.log(`❌ Login Failed: Password mismatch for ${email}`);
             return res.status(400).json({ error: "Invalid credentials" });
         }
 

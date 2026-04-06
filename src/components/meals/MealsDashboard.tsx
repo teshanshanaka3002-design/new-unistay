@@ -13,7 +13,7 @@ import { RatingSummary } from '../reviews/RatingSummary';
 import { ReviewList } from '../reviews/ReviewList';
 import { ReviewModal } from '../reviews/ReviewModal';
 import { cn } from '../../lib/utils';
-import { restaurantService } from '../../services/api';
+import { restaurantService, reviewService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 export const MealsDashboard: React.FC = () => {
@@ -32,14 +32,51 @@ export const MealsDashboard: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeTab, setActiveTab] = useState<'menu' | 'reviews'>('menu');
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
-  // Mock reviews for canteens
-  const mockReviews = [
-    { id: '1', userName: 'Amara Silva', rating: 5, comment: 'The best rice and curry in SLIIT! Always fresh and hot.', date: '2 days ago', university: 'SLIIT', isVerified: true },
-    { id: '2', userName: 'Kasun Perera', rating: 4, comment: 'Good food but the queue is sometimes too long. Ordering ahead helps!', date: '1 week ago', university: 'SLIIT', isVerified: true },
-    { id: '3', userName: 'Nimali Fernando', rating: 5, comment: 'Affordable and delicious. Highly recommend the chicken kottu.', date: '3 days ago', university: 'NSBM', isVerified: true },
-    { id: '4', userName: 'Saman Kumara', rating: 3, comment: 'Average taste, but very convenient location.', date: '2 weeks ago', university: 'IIT', isVerified: false },
-  ];
+  useEffect(() => {
+    if (selectedCafe) {
+      fetchReviews(selectedCafe.id);
+    }
+  }, [selectedCafe]);
+
+  const fetchReviews = async (cafeId: string) => {
+    try {
+      setLoadingReviews(true);
+      const res = await reviewService.getReviewsByTarget('MEAL', cafeId);
+      setReviews(res.data);
+    } catch (err) {
+      console.error('Failed to fetch reviews', err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleReviewSubmit = async (data: any) => {
+    if (!selectedCafe) return;
+    try {
+      await reviewService.submitReview({
+        type: 'MEAL',
+        targetId: selectedCafe.id,
+        rating: data.rating,
+        comment: data.comment
+      });
+      fetchReviews(selectedCafe.id);
+      setIsReviewModalOpen(false);
+    } catch (err) {
+      console.error('Failed to submit review', err);
+    }
+  };
+
+  const mappedReviews = reviews.map(r => ({
+    id: r._id,
+    userName: r.userName,
+    rating: r.rating,
+    comment: r.comment,
+    date: new Date(r.createdAt).toLocaleDateString(),
+    isVerified: true
+  }));
 
   useEffect(() => {
     fetchCanteens();
@@ -229,11 +266,8 @@ export const MealsDashboard: React.FC = () => {
       <ReviewModal 
         isOpen={isReviewModalOpen}
         onClose={() => setIsReviewModalOpen(false)}
-        onSubmit={(review) => {
-          console.log('New Cafe Review:', review);
-        }}
-        title={`Rate ${selectedCafe?.name}`}
-        categories={['Food Quality', 'Service Speed', 'Cleanliness', 'Value for Money']}
+        onSubmit={handleReviewSubmit}
+        title={`Rate your experience at ${selectedCafe?.name}`}
       />
 
       {/* Sticky Cart Button */}
@@ -416,7 +450,7 @@ export const MealsDashboard: React.FC = () => {
                 )}
               >
                 Reviews
-                <span className="px-1.5 py-0.5 rounded-full bg-paper text-[8px]">{mockReviews.length}</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-paper text-[8px]">{reviews.length}</span>
                 {activeTab === 'reviews' && (
                   <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold" />
                 )}
@@ -510,14 +544,24 @@ export const MealsDashboard: React.FC = () => {
 
                   {/* Rating Summary */}
                   <RatingSummary 
-                    averageRating={selectedCafe?.rating || 0}
-                    totalReviews={mockReviews.length}
-                    breakdown={{ 5: 2, 4: 1, 3: 1, 2: 0, 1: 0 }}
+                    averageRating={reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0}
+                    totalReviews={reviews.length}
+                    breakdown={reviews.reduce((acc, r) => {
+                      const rating = Math.round(r.rating);
+                      acc[rating] = (acc[rating] || 0) + 1;
+                      return acc;
+                    }, {} as any)}
                     className="p-12 rounded-[3rem] bg-paper/20 border border-black/5"
                   />
 
                   {/* Review List */}
-                  <ReviewList reviews={mockReviews} />
+                  {loadingReviews ? (
+                    <div className="flex justify-center py-20">
+                      <RefreshCw className="animate-spin text-gold" size={32} />
+                    </div>
+                  ) : (
+                    <ReviewList reviews={mappedReviews} />
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

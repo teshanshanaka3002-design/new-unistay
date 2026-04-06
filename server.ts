@@ -3,6 +3,8 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -77,11 +79,58 @@ const bookingSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { 
+    type: String, 
+    enum: ['STUDENT', 'BOARDING_OWNER', 'RESTAURANT_OWNER', 'ADMIN'],
+    default: 'STUDENT',
+    required: true
+  },
+  warning: { type: Number, default: 0 },
+  warningNote: { type: String, default: "" }
+}, { timestamps: true });
+
+const reportSchema = new mongoose.Schema({
+  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  fullName: { type: String, required: true },
+  studentIdNumber: { type: String, required: true },
+  university: { type: String, required: true },
+  contactNumber: { type: String, required: true },
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  images: [{ type: String }],
+  status: { type: String, enum: ['Pending', 'Resolved'], default: 'Pending' },
+  replies: [{
+    adminName: { type: String, required: true },
+    message: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  createdAt: { type: Date, default: Date.now }
+});
+
+const unifiedReviewSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userName: { type: String, required: true },
+  type: { type: String, enum: ['WEBSITE', 'STAY', 'MEAL'], required: true },
+  targetId: { type: mongoose.Schema.Types.ObjectId, required: false },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, required: true },
+  adminReply: { type: String },
+  adminName: { type: String },
+  replyDate: { type: Date }
+}, { timestamps: true });
+
 const Accommodation = mongoose.model('Accommodation', accommodationSchema);
 const Canteen = mongoose.model('Canteen', canteenSchema);
 const MenuItem = mongoose.model('MenuItem', menuItemSchema);
 const Order = mongoose.model('Order', orderSchema);
 const Booking = mongoose.model('Booking', bookingSchema);
+const User = mongoose.model('User', userSchema);
+const Report = mongoose.model('Report', reportSchema);
+const UnifiedReview = mongoose.model('UnifiedReview', unifiedReviewSchema);
 
 let isMongoConnected = false;
 
@@ -298,6 +347,176 @@ async function startServer() {
     console.error("MongoDB connection error (falling back to mock data):", err);
     isMongoConnected = false;
   }
+
+  // Ensure default admin exists and has correct credentials
+  const initializeAdmin = async () => {
+    try {
+      const adminEmail = "admin@unistay.com";
+      const hashedPassword = await bcrypt.hash("admin@password123", 10);
+      
+      await User.findOneAndUpdate(
+        { email: adminEmail },
+        { 
+          name: "System Admin",
+          password: hashedPassword,
+          role: "ADMIN"
+        },
+        { upsert: true, new: true }
+      );
+      
+      console.log("✅ Admin account synchronized: admin@unistay.com / admin@password123");
+    } catch (err: any) {
+      console.error("❌ Error initializing admin:", err.message);
+    }
+  };
+
+  if (isMongoConnected) {
+    await initializeAdmin();
+  }
+
+  // --- AUTH ROUTES ---
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { name, email, password, role } = req.body;
+      const exists = await User.findOne({ email });
+      if (exists) return res.status(400).json({ error: "User already exists" });
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = new User({ name, email, password: hashedPassword, role: role || 'STUDENT' });
+      await newUser.save();
+      res.status(201).json({ message: "Registered successfully" });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) return res.status(400).json({ error: "Invalid credentials" });
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
+
+      const token = jwt.sign(
+        { id: user._id, role: user.role }, 
+        process.env.JWT_SECRET || "fallback_secret", 
+        { expiresIn: "1d" }
+      );
+
+      res.json({ 
+        token, 
+        user: { 
+          id: user._id, 
+          name: user.name, 
+          email: user.email, 
+          role: user.role,
+          warning: user.warning || 0,
+          warningNote: user.warningNote || ""
+        } 
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // --- REVIEW ROUTES ---
+  app.get("/api/reviews/admin/all", async (req, res) => {
+    try {
+      const reviews = await UnifiedReview.find().sort({ createdAt: -1 });
+      res.json(reviews);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/reviews", async (req, res) => {
+    try {
+      const review = new UnifiedReview(req.body);
+      await review.save();
+      res.json(review);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get(["/api/reviews/target/:type", "/api/reviews/target/:type/:id"], async (req, res) => {
+    try {
+      const { type, id } = req.params;
+      const query: any = { type };
+      if (id) query.targetId = id;
+      const reviews = await UnifiedReview.find(query).sort({ createdAt: -1 });
+      res.json(reviews);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/reviews/admin/reply/:id", async (req, res) => {
+    try {
+      const { message } = req.body;
+      const review = await UnifiedReview.findByIdAndUpdate(req.params.id, {
+        adminReply: message,
+        adminName: "Admin",
+        replyDate: new Date()
+      }, { new: true });
+      res.json(review);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete("/api/reviews/admin/:id", async (req, res) => {
+    try {
+      await UnifiedReview.findByIdAndDelete(req.params.id);
+      res.json({ message: "Review deleted" });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // --- REPORT ROUTES ---
+  app.post("/api/reports/submit", async (req, res) => {
+    try {
+      const report = new Report(req.body);
+      await report.save();
+      res.json(report);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/reports/my-reports", async (req, res) => {
+    // Note: In real app, we'd get studentId from JWT. For now, we'll assume it's passed or filtered.
+    try {
+      const reports = await Report.find();
+      res.json(reports);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/reports/admin/all", async (req, res) => {
+    try {
+      const reports = await Report.find().sort({ createdAt: -1 });
+      res.json(reports);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/reports/:id/reply", async (req, res) => {
+    try {
+      const { message, status } = req.body;
+      const update: any = { $push: { replies: { adminName: "Admin", message, createdAt: new Date() } } };
+      if (status) update.status = status;
+      const report = await Report.findByIdAndUpdate(req.params.id, update, { new: true });
+      res.json(report);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 
   // API Routes
   app.get("/api/accommodations", async (req, res) => {

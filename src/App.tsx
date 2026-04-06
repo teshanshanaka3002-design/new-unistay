@@ -34,7 +34,8 @@ import {
   AdminDashboard, 
   AdminUserManagement,
   AdminContentManagement,
-  AdminReportsManager
+  AdminReportsManager,
+  AdminReviewsManager
 } from './pages/AdminPages';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from './components/UI';
@@ -112,7 +113,6 @@ export default function App() {
               <DashboardLayout><ProfilePage /></DashboardLayout>
             </ProtectedRoute>
           } />
-          {/* Add more student routes as needed */}
 
           {/* Boarding Owner Routes */}
           <Route path="/owner-dashboard" element={
@@ -202,6 +202,11 @@ export default function App() {
           <Route path="/admin/issues" element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
               <DashboardLayout><AdminReportsManager /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/reviews" element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <DashboardLayout><AdminReviewsManager /></DashboardLayout>
             </ProtectedRoute>
           } />
 
