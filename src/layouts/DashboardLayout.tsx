@@ -19,7 +19,8 @@ import {
   BarChart3,
   CreditCard,
   GraduationCap,
-  Image as ImageIcon
+  Image as ImageIcon,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth, Role } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -67,6 +68,7 @@ const navItems: NavItem[] = [
   { label: 'Admin Dashboard', path: '/admin-dashboard', icon: <LayoutDashboard size={20} />, roles: ['ADMIN'] },
   { label: 'User Management', path: '/admin/users', icon: <Users size={20} />, roles: ['ADMIN'] },
   { label: 'Hero Studio', path: '/admin/content', icon: <ImageIcon size={20} />, roles: ['ADMIN'] },
+  { label: 'Student Issues', path: '/admin/issues', icon: <AlertTriangle size={20} />, roles: ['ADMIN'] },
   { label: 'System Profile', path: '/profile', icon: <User size={20} />, roles: ['ADMIN'] },
 ];
 

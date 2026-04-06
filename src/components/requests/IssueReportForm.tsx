@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ValidatedInput, SelectField, TextAreaField } from './FormElements';
 import { Button } from '../UI';
-import { motion } from 'motion/react';
-import { CheckCircle2, Upload, X } from 'lucide-react';
-
+import { motion, AnimatePresence } from 'motion/react';
+import { CheckCircle2, Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { reportService } from '../../services/api';
 import { validateFullName, validatePhone } from '../../lib/validation';
+import { compressImage } from '../../lib/inputControl';
 
 interface IssueFormData {
   fullName: string;
-  userId: string;
+  studentIdNumber: string;
+  university: string;
   contactNumber: string;
-  boardingName: string;
+  title: string;
   issueType: string;
   description: string;
 }
@@ -20,11 +23,13 @@ interface FormErrors {
 }
 
 export const IssueReportForm: React.FC = () => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<IssueFormData>({
-    fullName: '',
-    userId: '',
-    contactNumber: '',
-    boardingName: '',
+    fullName: user?.name || '',
+    studentIdNumber: user?.studentId || '',
+    university: user?.university || '',
+    contactNumber: user?.phoneNumber || '',
+    title: '',
     issueType: '',
     description: '',
   });
@@ -33,7 +38,21 @@ export const IssueReportForm: React.FC = () => {
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Sync with user data if it loads late
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: prev.fullName || user.name || '',
+        studentIdNumber: prev.studentIdNumber || user.studentId || '',
+        university: prev.university || user.university || '',
+        contactNumber: prev.contactNumber || user.phoneNumber || '',
+      }));
+    }
+  }, [user]);
 
   const validate = (name: string, value: string) => {
     let error = '';
@@ -41,11 +60,18 @@ export const IssueReportForm: React.FC = () => {
       case 'fullName':
         error = validateFullName(value);
         break;
-      case 'userId':
-        if (!value) error = 'User ID is required';
+      case 'studentIdNumber':
+        if (!value) error = 'Student ID is required';
+        break;
+      case 'university':
+        if (!value) error = 'University is required';
         break;
       case 'contactNumber':
         error = validatePhone(value);
+        break;
+      case 'title':
+        if (!value) error = 'Issue title is required';
+        else if (value.length < 5) error = 'Must be at least 5 characters';
         break;
       case 'description':
         if (!value) error = 'Issue description is required';
@@ -61,7 +87,6 @@ export const IssueReportForm: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Real-time validation
     setErrors(prev => ({ ...prev, [name]: validate(name, value) }));
   };
 
@@ -70,13 +95,46 @@ export const IssueReportForm: React.FC = () => {
     setErrors(prev => ({ ...prev, [name]: validate(name, formData[name as keyof IssueFormData]) }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    setIsUploading(true);
+    const newImages = [...images];
+
+    // Process each file
+    const processFile = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const compressed = await compressImage(reader.result as string);
+            resolve(compressed);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    };
+
+    for (let i = 0; i < files.length; i++) {
+      if (newImages.length >= 5) break;
+      try {
+        const result = await processFile(files[i]);
+        newImages.push(result);
+      } catch (err) {
+        console.error('Image processing failed', err);
+      }
     }
+
+    setImages(newImages);
+    setIsUploading(false);
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const isFormValid = () => {
@@ -94,35 +152,34 @@ export const IssueReportForm: React.FC = () => {
       const allTouched: { [key: string]: boolean } = {};
       Object.keys(formData).forEach(key => allTouched[key] = true);
       setTouched(allTouched);
-      
-      const newErrors: FormErrors = {};
-      Object.keys(formData).forEach(key => {
-        const error = validate(key, formData[key as keyof IssueFormData]);
-        if (error) newErrors[key] = error;
-      });
-      setErrors(newErrors);
       return;
     }
 
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsSubmitting(false);
-    setIsSuccess(true);
-    
-    setTimeout(() => {
-      setIsSuccess(false);
+    try {
+      await reportService.submitReport({
+        ...formData,
+        images
+      });
+      setIsSuccess(true);
       setFormData({
-        fullName: '',
-        userId: '',
-        contactNumber: '',
-        boardingName: '',
+        fullName: user?.name || '',
+        studentIdNumber: user?.studentId || '',
+        university: user?.university || '',
+        contactNumber: user?.phoneNumber || '',
+        title: '',
         issueType: '',
         description: '',
       });
+      setImages([]);
       setTouched({});
       setErrors({});
-      setImagePreview(null);
-    }, 5000);
+    } catch (err) {
+      console.error('Submission failed', err);
+      alert('Failed to submit report. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSuccess) {
@@ -135,11 +192,15 @@ export const IssueReportForm: React.FC = () => {
         <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 shadow-xl shadow-emerald-100/50">
           <CheckCircle2 size={48} />
         </div>
-        <div className="space-y-2">
-          <h3 className="text-3xl font-serif text-ink">Issue Reported!</h3>
-          <p className="text-ink/50 max-w-md mx-auto">Your issue has been reported to the boarding owner. They will be notified immediately.</p>
+        <div className="space-y-4">
+          <h3 className="text-4xl font-serif text-ink">Request Successfully Logged</h3>
+          <p className="text-ink/50 max-w-md mx-auto text-sm leading-relaxed">
+            Your issue has been securely transmitted to the administration panel. You can track the progress and view replies in the **"My Reports"** tab.
+          </p>
         </div>
-        <Button onClick={() => setIsSuccess(false)} variant="secondary">Report Another Issue</Button>
+        <div className="pt-8">
+            <Button onClick={() => setIsSuccess(false)} variant="secondary" className="rounded-full px-12">Submit Another Report</Button>
+        </div>
       </motion.div>
     );
   }
@@ -159,19 +220,30 @@ export const IssueReportForm: React.FC = () => {
           required
         />
         <ValidatedInput 
-          label="User ID"
-          name="userId"
+          label="Student ID Number"
+          name="studentIdNumber"
           placeholder="e.g. STU-12345"
-          value={formData.userId}
+          value={formData.studentIdNumber}
           onChange={handleChange}
-          onBlur={() => handleBlur('userId')}
-          error={errors.userId}
-          success={touched.userId && !errors.userId}
+          onBlur={() => handleBlur('studentIdNumber')}
+          error={errors.studentIdNumber}
+          success={touched.studentIdNumber && !errors.studentIdNumber}
           required
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <ValidatedInput 
+          label="University"
+          name="university"
+          placeholder="e.g. SLIIT"
+          value={formData.university}
+          onChange={handleChange}
+          onBlur={() => handleBlur('university')}
+          error={errors.university}
+          success={touched.university && !errors.university}
+          required
+        />
         <ValidatedInput 
           label="Contact Number"
           name="contactNumber"
@@ -183,39 +255,45 @@ export const IssueReportForm: React.FC = () => {
           success={touched.contactNumber && !errors.contactNumber}
           required
         />
-        <ValidatedInput 
-          label="Boarding Name"
-          name="boardingName"
-          placeholder="e.g. Royal Palms Residency"
-          value={formData.boardingName}
-          onChange={handleChange}
-          onBlur={() => handleBlur('boardingName')}
-          error={errors.boardingName}
-          success={touched.boardingName && !errors.boardingName}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-2">
+            <ValidatedInput 
+                label="Issue Title"
+                name="title"
+                placeholder="Brief summary of the problem"
+                value={formData.title}
+                onChange={handleChange}
+                onBlur={() => handleBlur('title')}
+                error={errors.title}
+                success={touched.title && !errors.title}
+                required
+            />
+        </div>
+        <SelectField 
+            label="Issue Priority / Type"
+            name="issueType"
+            value={formData.issueType}
+            onChange={handleChange}
+            onBlur={() => handleBlur('issueType')}
+            error={errors.issueType}
+            success={touched.issueType && !errors.issueType}
+            required
+            options={[
+                { value: 'Maintenance', label: 'Maintenance (Technical)' },
+                { value: 'Payment', label: 'Financial / Payment' },
+                { value: 'Security', label: 'Security & Safety' },
+                { value: 'Health', label: 'Health & Hygiene' },
+                { value: 'Other', label: 'General / Other' },
+            ]}
         />
       </div>
 
-      <SelectField 
-        label="Issue Type"
-        name="issueType"
-        value={formData.issueType}
-        onChange={handleChange}
-        onBlur={() => handleBlur('issueType')}
-        error={errors.issueType}
-        success={touched.issueType && !errors.issueType}
-        required
-        options={[
-          { value: 'Maintenance', label: 'Maintenance (Water, Electricity, etc.)' },
-          { value: 'Payment Issue', label: 'Payment Issue' },
-          { value: 'Safety Issue', label: 'Safety Issue' },
-          { value: 'Other', label: 'Other' },
-        ]}
-      />
-
       <TextAreaField 
-        label="Issue Description"
+        label="Detailed Description"
         name="description"
-        placeholder="Please describe the issue in detail..."
+        placeholder="Please describe the issue in detail so we can help you faster..."
         value={formData.description}
         onChange={handleChange}
         onBlur={() => handleBlur('description')}
@@ -225,44 +303,69 @@ export const IssueReportForm: React.FC = () => {
         maxChars={500}
       />
 
-      <div className="space-y-4">
-        <label className="text-[10px] font-bold uppercase tracking-widest text-ink/40 ml-4">Upload Image (Optional)</label>
-        <div className="relative aspect-video rounded-[2rem] border-2 border-dashed border-ink/10 bg-white flex flex-col items-center justify-center overflow-hidden group transition-all hover:border-gold/30">
-          {imagePreview ? (
-            <>
-              <img src={imagePreview} className="w-full h-full object-contain" />
-              <button 
-                type="button"
-                onClick={() => setImagePreview(null)}
-                className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-md rounded-full text-ink shadow-lg hover:bg-white transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </>
-          ) : (
-            <>
-              <Upload size={40} className="text-ink/10 mb-4 group-hover:scale-110 transition-transform" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-ink/40">Click to select or drag and drop</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-ink/20 mt-2">PNG, JPG up to 5MB</p>
-              <input 
-                type="file" 
-                className="absolute inset-0 opacity-0 cursor-pointer" 
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-            </>
-          )}
+      <div className="space-y-6">
+        <div className="flex justify-between items-center px-4">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-ink/40">Visual Evidence (Optional)</label>
+            <span className="text-[9px] font-black uppercase tracking-widest text-ink/20">{images.length} / 5 Images</span>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <AnimatePresence>
+                {images.map((img, i) => (
+                    <motion.div 
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="relative aspect-square rounded-3xl overflow-hidden border border-black/5 bg-paper group"
+                    >
+                        <img src={img} className="w-full h-full object-cover" />
+                        <button 
+                            type="button"
+                            onClick={() => removeImage(i)}
+                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                        >
+                            <X size={12} />
+                        </button>
+                    </motion.div>
+                ))}
+            </AnimatePresence>
+
+            {images.length < 5 && (
+                <div className="relative aspect-square rounded-3xl border-2 border-dashed border-ink/10 bg-paper/50 flex flex-col items-center justify-center group hover:border-gold/30 hover:bg-white transition-all cursor-pointer overflow-hidden">
+                    {isUploading ? (
+                        <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                        <>
+                            <Upload size={24} className="text-ink/10 mb-2 group-hover:scale-110 transition-transform" />
+                            <p className="text-[8px] font-black uppercase tracking-widest text-ink/30">Add Photo</p>
+                            <input 
+                                type="file" 
+                                className="absolute inset-0 opacity-0 cursor-pointer" 
+                                accept="image/*"
+                                multiple
+                                onChange={handleImageChange}
+                            />
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+        
+        <div className="flex items-center gap-3 p-4 bg-paper/50 rounded-2xl border border-black/5">
+            <AlertCircle size={14} className="text-ink/20" />
+            <p className="text-[9px] font-bold uppercase tracking-widest text-ink/40">Include clear images of the issue for faster resolution.</p>
         </div>
       </div>
 
       <div className="pt-6">
         <Button 
           type="submit" 
-          className="w-full h-16 text-sm uppercase tracking-widest font-bold shadow-xl shadow-ink/10"
+          className="w-full h-20 text-sm uppercase tracking-widest font-bold shadow-2xl shadow-ink/10 rounded-[2rem]"
           isLoading={isSubmitting}
-          disabled={!isFormValid()}
+          disabled={!isFormValid() || isUploading}
         >
-          Report Issue
+          {isSubmitting ? 'Transmitting Data...' : 'Submit Official Report'}
         </Button>
       </div>
     </form>

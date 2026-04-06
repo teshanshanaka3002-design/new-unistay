@@ -60,7 +60,7 @@ import {
 import { MapSection } from '../components/MapSection';
 import { RequestSystem } from '../components/requests/RequestSystem';
 import Chatbot from '../components/Chatbot';
-import { adminService } from '../services/api';
+import { adminService, reportService } from '../services/api';
 
 // --- Student Dashboard ---
 export const StudentDashboard: React.FC = () => {
@@ -1471,10 +1471,25 @@ export const MyBookings: React.FC = () => {
 // --- Student Requests ---
 export const StudentRequests: React.FC = () => {
   const [view, setView] = useState<'list' | 'new'>('list');
-  const [requests] = useState([
-    { id: 1, type: 'Maintenance', subject: 'Broken tap in bathroom', status: 'Pending', date: '2026-03-15' },
-    { id: 2, type: 'General', subject: 'Inquiry about meal plan', status: 'Resolved', date: '2026-03-10' },
-  ]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const res = await reportService.getStudentReports();
+      setRequests(res.data);
+    } catch (err) {
+      console.error('Failed to fetch reports', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (view === 'new') {
     return (
@@ -1507,35 +1522,131 @@ export const StudentRequests: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        {requests.map((req) => (
-          <motion.div
-            key={`req-${req.id}`}
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="p-10 rounded-[2.5rem] bg-white border border-black/5 shadow-lg hover:shadow-xl transition-all duration-500 group"
-          >
-            <div className="flex justify-between items-center">
-              <div className="flex gap-8 items-center">
-                <div className="w-16 h-16 bg-paper rounded-2xl flex items-center justify-center text-ink/20 group-hover:text-gold transition-colors">
-                  <MessageSquare size={28} />
+      {loading ? (
+        <div className="py-24 flex flex-col items-center justify-center space-y-4">
+          <div className="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-ink/20">Parsing request history...</p>
+        </div>
+      ) : requests.length === 0 ? (
+        <div className="py-24 text-center space-y-6 bg-white rounded-[3rem] border border-black/5">
+          <div className="w-20 h-20 bg-paper rounded-full flex items-center justify-center mx-auto text-ink/10">
+            <MessageSquare size={40} />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-2xl font-serif text-ink">No Active Reports</h3>
+            <p className="text-ink/40 max-w-xs mx-auto text-sm">Your submitted issues and administrative replies will appear here.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6">
+          {requests.map((req, idx) => (
+            <motion.div
+              key={req._id || req.id || idx}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.05 }}
+              onClick={() => setSelectedReport(req)}
+              className="p-10 rounded-[2.5rem] bg-white border border-black/5 shadow-lg hover:shadow-2xl hover:scale-[1.01] transition-all duration-500 group cursor-pointer"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex gap-8 items-center">
+                  <div className="w-16 h-16 bg-paper rounded-2xl flex items-center justify-center text-ink/20 group-hover:text-gold group-hover:bg-gold/5 transition-all">
+                    <MessageSquare size={28} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-serif text-ink group-hover:text-gold transition-colors">{req.title || req.subject}</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">
+                      {req.issueType || req.type} • {new Date(req.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-2xl font-serif text-ink">{req.subject}</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">{req.type} • {req.date}</p>
+                <div className={cn(
+                  "px-5 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest border",
+                  req.status === 'Pending' ? "bg-amber-50 text-amber-600 border-amber-100" : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                )}>
+                  {req.status}
                 </div>
               </div>
-              <div className={cn(
-                "px-5 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest border",
-                req.status === 'Pending' ? "bg-amber-50 text-amber-600 border-amber-100" : "bg-emerald-50 text-emerald-600 border-emerald-100"
-              )}>
-                {req.status}
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      <Modal
+        isOpen={!!selectedReport}
+        onClose={() => setSelectedReport(null)}
+        title={selectedReport?.title || 'Report Details'}
+        maxWidth="3xl"
+      >
+        {selectedReport && (
+          <div className="space-y-10 p-2">
+            <div className="space-y-6">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Issue Statement</p>
+                  <p className="text-lg text-ink/70 leading-relaxed font-medium">{selectedReport.description}</p>
+                </div>
+                <Badge className={selectedReport.status === 'Resolved' ? 'bg-emerald-500 text-white border-0' : 'bg-amber-500 text-white border-0'}>
+                  {selectedReport.status}
+                </Badge>
+              </div>
+
+              {selectedReport.images?.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Attachments</p>
+                  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+                    {selectedReport.images.map((img: string, i: number) => (
+                      <div key={i} className="w-24 h-24 rounded-2xl overflow-hidden border border-black/5 bg-paper shrink-0">
+                        <img src={img} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-10 border-t border-black/5 space-y-8">
+              <div className="flex items-center gap-3">
+                <MessageCircle size={18} className="text-gold" />
+                <h4 className="text-xl font-serif text-ink">Admin Feedback</h4>
+              </div>
+
+              <div className="space-y-6">
+                {selectedReport.replies?.length > 0 ? (
+                  selectedReport.replies.map((reply: any, i: number) => (
+                    <div key={i} className="flex gap-6 items-start">
+                      <div className="w-10 h-10 rounded-2xl bg-gold/10 text-gold flex items-center justify-center shrink-0">
+                        <div className="w-2 h-2 bg-current rounded-full" />
+                      </div>
+                      <div className="space-y-2 flex-1">
+                          <div className="flex justify-between items-center">
+                              <p className="text-xs font-bold text-ink">{reply.adminName} <span className="text-ink/30 font-medium ml-2 text-[10px]">Official Response</span></p>
+                              <p className="text-[9px] font-bold uppercase tracking-widest text-ink/20">
+                                  {new Date(reply.createdAt).toLocaleDateString()}
+                              </p>
+                          </div>
+                        <div className="p-6 rounded-[2rem] rounded-tl-none bg-paper/50 text-ink/70 text-sm leading-relaxed border border-black/5 italic">
+                          "{reply.message}"
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-10 rounded-[2.5rem] bg-paper/30 border border-dashed border-black/10 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Awaiting official response...</p>
+                  </div>
+                )}
               </div>
             </div>
-          </motion.div>
-        ))}
-      </div>
+
+            <div className="flex justify-end pt-4">
+              <Button onClick={() => setSelectedReport(null)} className="rounded-full px-10">Close Details</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

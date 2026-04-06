@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Building2, Utensils, ShoppingBag, Star, TrendingUp, 
   ShieldAlert, UserX, AlertTriangle, Image as ImageIcon, Plus, 
-  Trash2, ExternalLink, LayoutDashboard, Settings, LogOut, Search
+  Trash2, ExternalLink, LayoutDashboard, Settings, LogOut, Search,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { adminService } from '../services/api';
@@ -447,6 +448,237 @@ export const AdminContentManagement: React.FC = () => {
             <Button type="submit" className="rounded-full px-8 bg-gold text-ink shadow-lg shadow-gold/20 hover:scale-105 transition-all">Publish Slide</Button>
           </div>
         </form>
+      </Modal>
+    </div>
+  );
+};
+
+// --- Student Requests & Issues Manager ---
+export const AdminReportsManager: React.FC = () => {
+  const [reports, setReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const res = await adminService.getAdminReports();
+      setReports(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReply = async (statusOverride?: string) => {
+    if (!replyMessage && !statusOverride) return;
+
+    try {
+      setIsSubmitting(true);
+      await adminService.replyToReport(selectedReport._id, {
+        message: replyMessage,
+        status: statusOverride || selectedReport.status
+      });
+      alert('Response recorded successfully.');
+      setReplyMessage('');
+      setSelectedReport(null);
+      fetchReports();
+    } catch (err) {
+      alert('Failed to send reply.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    return status === 'Resolved' ? 'bg-emerald-500' : 'bg-amber-500';
+  };
+
+  return (
+    <div className="p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex justify-between items-center text-white p-12 rounded-[3.5rem] bg-gradient-to-br from-ink to-black shadow-2xl relative overflow-hidden">
+        <div className="relative z-10">
+          <h1 className="text-5xl font-serif">Student Issues</h1>
+          <p className="text-white/50 font-medium mt-4 max-w-lg">Review, respond, and resolve all student concerns and system reports in real-time.</p>
+        </div>
+        <AlertTriangle size={300} className="absolute -right-24 -bottom-24 text-white/5 -rotate-12" />
+      </div>
+
+      <Card className="rounded-[3rem] border-black/5 overflow-hidden shadow-2xl bg-white/50 backdrop-blur-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-paper/50">
+                <th className="py-8 px-10 text-[10px] font-black uppercase tracking-[0.2em] text-ink/30">Student Details</th>
+                <th className="py-8 px-10 text-[10px] font-black uppercase tracking-[0.2em] text-ink/30">Issue Subject</th>
+                <th className="py-8 px-10 text-[10px] font-black uppercase tracking-[0.2em] text-ink/30">Status</th>
+                <th className="py-8 px-10 text-[10px] font-black uppercase tracking-[0.2em] text-right text-ink/30">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/5">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="py-24 text-center">
+                    <div className="w-10 h-10 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink/30">Loading reports...</p>
+                  </td>
+                </tr>
+              ) : reports.length > 0 ? reports.map((report) => (
+                <tr key={report._id} className="group hover:bg-paper/30 transition-all duration-300">
+                  <td className="py-8 px-10">
+                    <div className="space-y-1">
+                      <p className="font-bold text-ink">{report.fullName}</p>
+                      <p className="text-[10px] text-ink/40 font-bold uppercase tracking-widest">{report.studentIdNumber} · {report.university}</p>
+                    </div>
+                  </td>
+                  <td className="py-8 px-10">
+                    <div className="space-y-1">
+                      <p className="font-medium text-ink/70">{report.title}</p>
+                      <p className="text-[10px] text-ink/30 font-bold uppercase tracking-widest">
+                        {new Date(report.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </td>
+                  <td className="py-8 px-10">
+                    <Badge className={`${getStatusColor(report.status)} text-white border-0 text-[8px] font-black uppercase`}>
+                      {report.status}
+                    </Badge>
+                  </td>
+                  <td className="py-8 px-10 text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl h-11 px-6 border-black/5 hover:bg-paper gap-2"
+                      onClick={() => setSelectedReport(report)}
+                    >
+                      View & Respond <ChevronRight size={14} />
+                    </Button>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={4} className="py-24 text-center">
+                    <ShoppingBag size={48} className="text-ink/10 mx-auto mb-4" />
+                    <p className="text-sm text-ink/40 font-medium italic">No issues reported yet. System status clear.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Response Modal */}
+      <Modal
+        isOpen={!!selectedReport}
+        onClose={() => setSelectedReport(null)}
+        title="Manage Student Issue"
+        maxWidth="4xl"
+      >
+        {selectedReport && (
+          <div className="space-y-10 p-2">
+            <div className="grid md:grid-cols-2 gap-10">
+              {/* Left: Info */}
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-ink/30">Detailed Issue Information</h4>
+                  <div className="p-8 rounded-[2.5rem] bg-paper/50 border border-black/5 space-y-6">
+                    <div>
+                      <p className="text-2xl font-serif text-ink">{selectedReport.title}</p>
+                      <p className="text-xs font-bold text-ink/40 mt-1 uppercase tracking-widest">{selectedReport.issueType || 'General Issue'}</p>
+                    </div>
+                    <p className="text-sm text-ink/70 leading-relaxed italic border-l-4 border-gold pl-6 py-2">
+                      "{selectedReport.description}"
+                    </p>
+                    <div className="pt-4 space-y-2 border-t border-black/5">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-ink/20">Contact Channel</p>
+                      <p className="text-sm font-bold text-ink/60">{selectedReport.contactNumber}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedReport.images?.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-ink/30">Uploaded Evidence</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      {selectedReport.images.map((img: string, i: number) => (
+                        <div key={i} className="aspect-square rounded-2xl overflow-hidden border border-black/5 bg-paper">
+                          <img src={img} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Response */}
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-ink/30">Send Administrative Response</h4>
+                  <textarea
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    placeholder="Type your official response to the student here..."
+                    className="w-full p-8 bg-paper rounded-[2.5rem] border border-black/5 text-sm min-h-[250px] focus:outline-none focus:ring-2 focus:ring-gold transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <Button
+                    className="w-full h-16 rounded-full bg-ink text-white font-bold uppercase tracking-widest text-xs shadow-xl shadow-ink/20"
+                    onClick={() => handleReply()}
+                    isLoading={isSubmitting}
+                    disabled={!replyMessage.trim()}
+                  >
+                    Send Message & Keep Pending
+                  </Button>
+                  <div className="flex gap-4">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-16 rounded-full border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold uppercase tracking-widest text-xs"
+                      onClick={() => handleReply('Resolved')}
+                      disabled={isSubmitting}
+                    >
+                      Mark as Resolved
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-16 rounded-full px-8"
+                      onClick={() => setSelectedReport(null)}
+                    >
+                      Discard
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* History Log */}
+            {selectedReport.replies?.length > 0 && (
+              <div className="pt-10 border-t border-black/5 space-y-6">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-ink/30 text-center">Previous Communications</h4>
+                <div className="space-y-4">
+                  {selectedReport.replies.map((reply: any, i: number) => (
+                    <div key={i} className="p-6 rounded-3xl bg-emerald-50/30 border border-emerald-100/50 flex justify-between items-center gap-6">
+                      <div className="flex-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-1">Official Response from {reply.adminName}</p>
+                        <p className="text-sm text-ink/60 italic">"{reply.message}"</p>
+                      </div>
+                      <p className="text-[9px] font-bold text-ink/20 whitespace-nowrap">{new Date(reply.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

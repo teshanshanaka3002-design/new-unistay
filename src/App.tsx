@@ -33,7 +33,8 @@ import {
 import { 
   AdminDashboard, 
   AdminUserManagement,
-  AdminContentManagement
+  AdminContentManagement,
+  AdminReportsManager
 } from './pages/AdminPages';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from './components/UI';
@@ -196,6 +197,11 @@ export default function App() {
           <Route path="/admin/content" element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
               <DashboardLayout><AdminContentManagement /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/issues" element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <DashboardLayout><AdminReportsManager /></DashboardLayout>
             </ProtectedRoute>
           } />
 

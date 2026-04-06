@@ -25,6 +25,7 @@ const restaurantRoutes = require("./routes/restaurantRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 const User = require("./models/User");
 const bcrypt = require("bcryptjs");
 
@@ -35,6 +36,7 @@ app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Ensure default admin exists
 const initializeAdmin = async () => {

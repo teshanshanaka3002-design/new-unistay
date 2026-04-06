@@ -92,5 +92,13 @@ export const adminService = {
   banUser: (id: string) => api.delete(`/admin/ban/${id}`),
   getHeroContent: () => api.get('/admin/hero'),
   createHeroContent: (data: any) => api.post('/admin/hero', data),
-  deleteHeroContent: (id: string) => api.delete(`/admin/hero/${id}`)
+  deleteHeroContent: (id: string) => api.delete(`/admin/hero/${id}`),
+  // New Report related admin endpoints
+  getAdminReports: () => api.get('/reports/admin/all'),
+  replyToReport: (id: string, data: { message: string, status?: string }) => api.post(`/reports/${id}/reply`, data)
+};
+
+export const reportService = {
+  submitReport: (data: any) => api.post('/reports/submit', data),
+  getStudentReports: () => api.get('/reports/my-reports'),
 };
