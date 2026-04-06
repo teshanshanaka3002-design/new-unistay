@@ -11,6 +11,10 @@ const canteenSchema = new mongoose.Schema({
     image: { type: String, required: true }
 }, { timestamps: true });
 
+// Add indexes for faster searches
+canteenSchema.index({ ownerId: 1 });
+canteenSchema.index({ university: 1 });
+
 const Canteen = mongoose.model("Canteen", canteenSchema);
 
 module.exports = Canteen;

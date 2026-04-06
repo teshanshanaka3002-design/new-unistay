@@ -30,6 +30,11 @@ const accommodationSchema = new mongoose.Schema({
     reviews: [reviewSchema]
 }, { timestamps: true });
 
+// Add indexes for faster search and filtering
+accommodationSchema.index({ ownerId: 1 });
+accommodationSchema.index({ university: 1 });
+accommodationSchema.index({ city: 1 });
+
 const Accommodation = mongoose.model("Accommodation", accommodationSchema);
 
 module.exports = Accommodation;

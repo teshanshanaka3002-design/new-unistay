@@ -4,8 +4,8 @@ const Accommodation = require("../models/Accommodation");
 
 router.get("/", async (req, res) => {
     try {
-        // Return mostly everything right now. A robust app would parse filters.
-        const data = await Accommodation.find({});
+        // Exclude the heavy 'images' array from list views. Keep the 'image' field for thumbnail.
+        const data = await Accommodation.find({}).select("-images");
         res.json({
             value: data,
             count: data.length
@@ -27,7 +27,7 @@ router.get("/:id", async (req, res) => {
 
 router.get("/owner/:ownerId", async (req, res) => {
     try {
-        const data = await Accommodation.find({ ownerId: req.params.ownerId });
+        const data = await Accommodation.find({ ownerId: req.params.ownerId }).select("-images");
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });

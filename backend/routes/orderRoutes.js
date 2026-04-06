@@ -19,8 +19,21 @@ router.get("/owner/:ownerId", async (req, res) => {
     try {
         const canteens = await Canteen.find({ ownerId: req.params.ownerId });
         const canteenIds = canteens.map(c => c._id);
-        const orders = await Order.find({ canteenId: { $in: canteenIds } }).sort({ createdAt: -1 });
+        const orders = await Order.find({ canteenId: { $in: canteenIds } })
+            .select("-identityProof")
+            .sort({ createdAt: -1 });
         res.json(orders);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET a single order with full details (including identity proof)
+router.get("/:id", async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ error: "Order not found" });
+        res.json(order);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -29,7 +42,9 @@ router.get("/owner/:ownerId", async (req, res) => {
 // GET orders placed by a specific student
 router.get("/student/:studentId", async (req, res) => {
     try {
-        const orders = await Order.find({ studentId: req.params.studentId }).sort({ createdAt: -1 });
+        const orders = await Order.find({ studentId: req.params.studentId })
+            .select("-identityProof")
+            .sort({ createdAt: -1 });
         res.json(orders);
     } catch (err) {
         res.status(500).json({ error: err.message });

@@ -9,6 +9,7 @@ import {
   ChevronRight, DollarSign, Package, TrendingUp
 } from 'lucide-react';
 import { restaurantService } from '../services/api';
+import { compressImage } from '../lib/inputControl';
 
 // ─── Dashboard Overview ────────────────────────────────────────────
 export const RestaurantOwnerDashboard: React.FC = () => {
@@ -188,10 +189,11 @@ export const MyRestaurantPage: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const result = reader.result as string;
-        setPreviewImage(result);
-        setFormData(prev => ({ ...prev, image: result }));
+        const compressed = await compressImage(result);
+        setPreviewImage(compressed);
+        setFormData(prev => ({ ...prev, image: compressed }));
       };
       reader.readAsDataURL(file);
     }
@@ -503,11 +505,12 @@ export const ManageMenu: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const result = reader.result as string;
-        setPreviewImage(result);
-        if (isEdit) setSelectedItem((prev: any) => ({ ...prev, image: result }));
-        else setFormData(prev => ({ ...prev, image: result }));
+        const compressed = await compressImage(result);
+        setPreviewImage(compressed);
+        if (isEdit) setSelectedItem((prev: any) => ({ ...prev, image: compressed }));
+        else setFormData(prev => ({ ...prev, image: compressed }));
       };
       reader.readAsDataURL(file);
     }
@@ -780,6 +783,8 @@ export const RestaurantOrders: React.FC = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewOrder, setViewOrder] = useState<any>(null);
+  const [loadingOrder, setLoadingOrder] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) fetchOrders();
@@ -803,6 +808,20 @@ export const RestaurantOrders: React.FC = () => {
       setOrders(prev => prev.map(o => (o._id || o.id) === id ? { ...o, status } : o));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleViewOrder = async (orderId: string) => {
+    try {
+      setIsViewModalOpen(true);
+      setLoadingOrder(true);
+      const res = await restaurantService.getOrderById(orderId);
+      setViewOrder(res.data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load order details.");
+    } finally {
+      setLoadingOrder(false);
     }
   };
 
@@ -868,14 +887,13 @@ export const RestaurantOrders: React.FC = () => {
                     <span className="text-base font-bold text-ink">Rs. {order.totalPrice}</span>
                   </div>
                 </div>
-
-                {/* Identity Proof */}
-                {order.identityProof && (
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Identity Proof</p>
-                    <img src={order.identityProof} alt="Student ID" className="w-full h-32 object-cover rounded-2xl border border-black/5" />
-                  </div>
-                )}
+                
+                <button 
+                  onClick={() => handleViewOrder(order._id || order.id)}
+                  className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold hover:text-gold/80 transition-all flex items-center gap-2"
+                >
+                  <Eye size={12} /> View Details & ID Proof
+                </button>
               </div>
 
               <div className="flex flex-col gap-3 pt-4">
@@ -899,6 +917,60 @@ export const RestaurantOrders: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Order Details Modal */}
+      <Modal 
+        isOpen={isViewModalOpen} 
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setViewOrder(null);
+        }}
+        title="Order Details & Verification"
+        maxWidth="2xl"
+      >
+        {loadingOrder ? (
+          <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <div className="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-ink/40">Fetching secure details...</p>
+          </div>
+        ) : viewOrder ? (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="grid grid-cols-2 gap-6 bg-paper/50 p-6 rounded-[2rem] border border-black/5">
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Student Name</p>
+                <p className="text-lg font-bold text-ink">{viewOrder.studentName}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Student ID</p>
+                <p className="text-lg font-bold text-ink">{viewOrder.studentIdNumber}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">University</p>
+                <p className="text-sm font-semibold text-ink/70">{viewOrder.studentUniversity}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Contact</p>
+                <p className="text-sm font-semibold text-ink/70">{viewOrder.studentPhone}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Verification Document</p>
+              <div className="bg-paper/30 p-4 rounded-3xl border border-black/5 flex justify-center">
+                {viewOrder.identityProof ? (
+                  <img src={viewOrder.identityProof} alt="Identity Proof" className="max-h-80 object-contain rounded-xl shadow-lg" />
+                ) : (
+                  <p className="text-ink/40 italic text-sm py-8">No identity proof provided with this order.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-black/5">
+              <Button variant="outline" onClick={() => setIsViewModalOpen(false)}>Close</Button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 };

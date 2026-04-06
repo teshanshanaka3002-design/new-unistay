@@ -24,6 +24,10 @@ const orderSchema = new mongoose.Schema({
     status: { type: String, enum: ["Pending", "Preparing", "Ready", "Collected"], default: "Pending" }
 }, { timestamps: true });
 
+// Add indexes for faster lookups
+orderSchema.index({ studentId: 1 });
+orderSchema.index({ canteenId: 1 });
+
 const Order = mongoose.model("Order", orderSchema);
 
 module.exports = Order;

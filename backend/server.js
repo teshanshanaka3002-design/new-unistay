@@ -37,20 +37,24 @@ app.get("/", (req, res) => {
     res.send("UniStay API is running...");
 });
 
-// MongoDB connection
+// MongoDB connection with fallback
+let isMockMode = false;
 mongoose
-    .connect(process.env.MONGO_URI)
+    .connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 })
     .then(() => {
         console.log("✅ MongoDB Connected");
-
-        // Start server ONLY after DB connects
-        app.listen(PORT, () => {
-            console.log(`🔥 Server running on http://localhost:${PORT}`);
-        });
     })
     .catch((err) => {
-        console.error("❌ MongoDB connection error:");
-        console.error(err);
+        console.error("❌ MongoDB connection error. Entering MOCK MODE for development.");
+        isMockMode = true;
+    })
+    .finally(() => {
+        app.set('isMockMode', isMockMode);
+        // Start server regardless of DB status
+        app.listen(PORT, () => {
+            console.log(`🔥 Server running on http://localhost:${PORT}`);
+            if (isMockMode) console.log("⚠️  WARNING: Running in MOCK MODE (No DB connectivity)");
+        });
     });
 
 // Handle unexpected errors

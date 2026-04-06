@@ -55,9 +55,11 @@ export const accommodationService = {
 
 export const bookingService = {
   create: (data: any) => api.post('/bookings', data),
+  getById: (id: string) => api.get(`/bookings/${id}`),
   getByOwner: (ownerId: string) => api.get(`/bookings/owner/${ownerId}`),
   getByStudent: (studentId: string) => api.get(`/bookings/student/${studentId}`),
   updateStatus: (id: string, status: string, notes?: string) => api.put(`/bookings/${id}/status`, { status, notes }),
+  addMonthlyPayment: (id: string, data: { amount: number, proof: string }) => api.post(`/bookings/${id}/payments`, data),
 };
 
 export const restaurantService = {
@@ -76,6 +78,7 @@ export const restaurantService = {
 
   // Orders
   placeOrder: (orderData: any) => api.post('/orders', orderData),
+  getOrderById: (id: string) => api.get(`/orders/${id}`),
   getOrdersByOwner: (ownerId: string) => api.get(`/orders/owner/${ownerId}`),
   getOrdersByStudent: (studentId: string) => api.get(`/orders/student/${studentId}`),
   updateOrderStatus: (id: string, status: string) => api.put(`/orders/${id}/status`, { status }),

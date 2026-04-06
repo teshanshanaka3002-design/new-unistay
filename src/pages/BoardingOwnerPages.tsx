@@ -31,7 +31,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { sanitizePhoneNumber } from '../lib/inputControl';
+import { sanitizePhoneNumber, compressImage } from '../lib/inputControl';
 
 // --- Dashboard Overview ---
 export const DashboardOverview: React.FC = () => {
@@ -269,9 +269,10 @@ export const AddListingForm: React.FC = () => {
     
     filesArray.forEach(file => {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
+        const compressed = await compressImage(reader.result as string);
         setPreviewImages(prev => {
-          if (prev.length < 5) return [...prev, reader.result as string];
+          if (prev.length < 5) return [...prev, compressed];
           return prev;
         });
       };
@@ -745,6 +746,7 @@ export const BookingsPage: React.FC = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -772,9 +774,18 @@ export const BookingsPage: React.FC = () => {
     }
   };
 
-  const handleViewBooking = (booking: any) => {
-    setSelectedBooking(booking);
-    setIsViewModalOpen(true);
+  const handleViewBooking = async (booking: any) => {
+    try {
+      setIsViewModalOpen(true);
+      setLoadingDetails(true);
+      const res = await bookingService.getById(booking._id || booking.id);
+      setSelectedBooking(res.data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load booking details.");
+    } finally {
+      setLoadingDetails(false);
+    }
   };
 
   return (
@@ -853,12 +864,20 @@ export const BookingsPage: React.FC = () => {
 
       <Modal 
         isOpen={isViewModalOpen} 
-        onClose={() => setIsViewModalOpen(false)}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedBooking(null);
+        }}
         title="Student Booking Information"
         maxWidth="2xl"
       >
-        {selectedBooking && (
-          <div className="space-y-8">
+        {loadingDetails ? (
+          <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <div className="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-ink/40">Fetching secure details...</p>
+          </div>
+        ) : selectedBooking ? (
+          <div className="space-y-8 animate-in fade-in duration-500">
             <div className="grid grid-cols-2 gap-6 bg-paper/50 p-6 rounded-[2rem] border border-black/5">
               <div>
                 <p className="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Full Name</p>
@@ -901,7 +920,7 @@ export const BookingsPage: React.FC = () => {
               <Button variant="outline" onClick={() => setIsViewModalOpen(false)}>Close</Button>
             </div>
           </div>
-        )}
+        ) : null}
       </Modal>
     </div>
   );

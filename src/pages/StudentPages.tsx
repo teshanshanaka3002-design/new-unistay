@@ -5,6 +5,7 @@ import { Card, Button, Input, Modal, Container, Badge } from '../components/UI';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { compressImage } from '../lib/inputControl';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -50,7 +51,10 @@ import {
   Calendar,
   History,
   Layers,
-  Building2
+  Building2,
+  DollarSign,
+  FileText,
+  Check
 } from 'lucide-react';
 
 import { MapSection } from '../components/MapSection';
@@ -458,6 +462,7 @@ export const FindAccommodation: React.FC = () => {
   const [listings, setListings] = useState<any[]>([]);
   const [filteredListings, setFilteredListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   useEffect(() => {
     fetchListings();
@@ -721,10 +726,27 @@ export const FindAccommodation: React.FC = () => {
     }
   };
 
+  const handleSelectListing = async (listing: any) => {
+    setSelectedListing(listing);
+    try {
+      setLoadingDetails(true);
+      const res = await accommodationService.getById(listing._id || listing.id);
+      setSelectedListing(res.data);
+    } catch (err) {
+      console.error('Failed to fetch accommodation details', err);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
   if (selectedListing) {
     return (
-      <div className="min-h-screen bg-paper pb-20">
-        <div className="max-w-7xl mx-auto px-6 pt-12">
+      <div className="min-h-screen bg-paper pb-20 relative">
+        {loadingDetails && (
+          <div className="fixed inset-x-0 top-0 h-1 z-50 overflow-hidden">
+            <div className="h-full bg-gold animate-progress origin-left" />
+          </div>
+        )}
+        <div className={cn("max-w-7xl mx-auto px-6 pt-12 transition-opacity duration-300", loadingDetails ? "opacity-50" : "opacity-100")}>
           <AccommodationDetails
             accommodation={selectedListing}
             onBack={() => setSelectedListing(null)}
@@ -808,7 +830,7 @@ export const FindAccommodation: React.FC = () => {
                   <AccommodationCard
                     key={listing.id}
                     accommodation={listing}
-                    onClick={() => setSelectedListing(listing)}
+                    onClick={() => handleSelectListing(listing)}
                   />
                 ))
               ) : (
@@ -851,6 +873,52 @@ export const FindRestaurants: React.FC = () => {
 };
 
 
+// --- Status Timeline Component ---
+const BookingStatusTimeline: React.FC<{ status: string, hasReceipt: boolean }> = ({ status, hasReceipt }) => {
+  const steps = [
+    { label: 'Request Sent', completed: true },
+    { label: 'Doc Uploaded', completed: hasReceipt },
+    { label: 'Under Review', completed: status === 'Approved' || (status === 'Pending' && hasReceipt), active: status === 'Pending' && hasReceipt },
+    { label: 'Approved', completed: status === 'Approved' }
+  ];
+
+  return (
+    <div className="flex items-center justify-between w-full max-w-3xl mx-auto py-12 px-4">
+      {steps.map((step, i) => (
+        <React.Fragment key={i}>
+          <div className="flex flex-col items-center gap-3 relative">
+            <div className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-700 border-2",
+              step.completed ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" : 
+              step.active ? "bg-white border-gold text-gold animate-pulse shadow-lg shadow-gold/20" : 
+              "bg-white border-black/5 text-ink/10"
+            )}>
+              {step.completed ? <Check size={18} strokeWidth={3} /> : <div className={cn("w-2 h-2 rounded-full", step.active ? "bg-gold" : "bg-current")} />}
+            </div>
+            <span className={cn(
+              "text-[8px] font-bold uppercase tracking-[0.2em] absolute -bottom-8 w-max text-center transition-colors duration-500",
+              step.completed ? "text-emerald-600" : step.active ? "text-gold" : "text-ink/20"
+            )}>
+              {step.label}
+            </span>
+          </div>
+          {i < steps.length - 1 && (
+            <div className="flex-1 h-[1.5px] mx-2 bg-black/5 relative overflow-hidden rounded-full">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: step.completed ? "100%" : "0%" }}
+                transition={{ duration: 1, ease: "easeInOut" }}
+                className="absolute inset-0 bg-emerald-500"
+              />
+            </div>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+};
+
+
 // --- My Bookings ---
 export const MyBookings: React.FC = () => {
   const navigate = useNavigate();
@@ -859,11 +927,14 @@ export const MyBookings: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isPaymentsModalOpen, setIsPaymentsModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -903,11 +974,39 @@ export const MyBookings: React.FC = () => {
     }
   };
 
+  const handleMonthlyPaymentUpload = async () => {
+    if (!selectedBooking || !previewImage || !paymentAmount) return;
+    try {
+      setIsSubmitting(true);
+      const res = await bookingService.addMonthlyPayment(selectedBooking._id || selectedBooking.id, {
+        amount: parseFloat(paymentAmount),
+        proof: previewImage
+      });
+      
+      setBookings(prev => prev.map(b => 
+        (b._id || b.id) === (selectedBooking._id || selectedBooking.id) ? res.data : b
+      ));
+      
+      setIsPaymentsModalOpen(false);
+      setPreviewImage(null);
+      setPaymentAmount('');
+      alert('Monthly payment proof uploaded successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload payment proof.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setPreviewImage(reader.result as string);
+      reader.onloadend = async () => {
+        const compressed = await compressImage(reader.result as string);
+        setPreviewImage(compressed);
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -922,13 +1021,29 @@ export const MyBookings: React.FC = () => {
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           Back to Stays
         </button>
-        <div className="space-y-4">
-          <h1 className="text-6xl font-serif text-ink">My Bookings</h1>
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-ink/30">Track your housing requests and payments</p>
+        <div className="flex items-center justify-between">
+          <div className="space-y-4">
+            <h1 className="text-5xl font-serif text-ink tracking-tight">My Bookings</h1>
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-ink/30">Track your housing requests and payments</p>
+          </div>
+          <button
+            onClick={fetchBookings}
+            disabled={loading}
+            className="p-4 bg-white border border-black/5 rounded-2xl text-ink/40 hover:text-gold hover:bg-gold/5 transition-all shadow-sm group disabled:opacity-50"
+            title="Refresh Status"
+          >
+            <motion.div
+              animate={loading ? { rotate: 360 } : { rotate: 0 }}
+              transition={loading ? { repeat: Infinity, duration: 1, ease: "linear" } : { duration: 0.5 }}
+            >
+              <RefreshCw size={20} className="group-hover:scale-110 transition-transform" />
+            </motion.div>
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-12">
+      <div className="max-w-5xl mx-auto space-y-12">
+        <div className="grid grid-cols-1 gap-12">
         {loading ? (
           <p className="text-ink/40">Loading bookings...</p>
         ) : bookings.length === 0 ? (
@@ -950,86 +1065,111 @@ export const MyBookings: React.FC = () => {
             return (
               <motion.div
                 key={`booking-${booking._id || booking.id || i}`}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 className={cn(
-                  "group relative bg-white rounded-[3rem] border border-black/5 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700",
+                  "group relative bg-gradient-to-tr from-white to-paper/30 rounded-[2.5rem] border border-black/5 overflow-hidden shadow-xl hover:shadow-2xl hover:border-gold/20 transition-all duration-700",
                   isCanceled && "opacity-70 grayscale"
                 )}
               >
-                <div className="flex flex-col lg:flex-row">
-                  <div className="lg:w-1/3 h-80 lg:h-auto overflow-hidden relative">
-                    <img
-                      src={acc.images?.[0] || acc.image || `https://picsum.photos/seed/acc${i}/800/800`}
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                      alt={acc.name}
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-8 left-8">
-                      <div className={cn(
-                        "px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest border backdrop-blur-md",
-                        isApproved ? 'bg-emerald-50/80 text-emerald-600 border-emerald-100' : 
-                        isCanceled ? 'bg-red-50/80 text-red-600 border-red-100' :
-                        'bg-amber-50/80 text-amber-600 border-amber-100'
-                      )}>
-                        {booking.status || 'Pending Review'}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 p-12 lg:p-16 space-y-10">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2 flex-grow">
-                        <h3 className="text-4xl font-serif text-ink group-hover:text-gold transition-colors">{acc.name || "Student Accommodation"}</h3>
-                        <div className="flex items-center gap-2 text-ink/40 text-[10px] font-bold uppercase tracking-widest">
-                          <MapPin size={14} className="text-gold" />
-                          {acc.location || acc.city || "Pending Location"}
+                <div className="flex flex-col">
+                  {/* Card Main Info */}
+                  <div className="flex flex-col lg:flex-row">
+                    <div className="lg:w-2/5 h-96 lg:h-auto overflow-hidden relative">
+                      <img
+                        src={acc.images?.[0] || acc.image || `https://picsum.photos/seed/acc${i}/1200/1200`}
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                        alt={acc.name}
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute top-10 left-10 flex gap-3">
+                        <div className={cn(
+                          "px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border backdrop-blur-md shadow-xl",
+                          isApproved ? 'bg-emerald-50/90 text-emerald-600 border-emerald-100' : 
+                          isCanceled ? 'bg-red-50/90 text-red-600 border-red-100' :
+                          'bg-gold/90 text-white border-gold/20'
+                        )}>
+                          {booking.status || 'Under Review'}
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-10 border-y border-black/5">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-ink/20">Monthly Rent</p>
-                        <p className="text-xl font-serif text-ink">LKR {acc.price?.toLocaleString() || "..."}</p>
+                    <div className="flex-1 p-10 lg:p-14 space-y-10">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <h3 className="text-4xl font-serif text-ink tracking-tight leading-tight">{acc.name || "Student Living"}</h3>
+                          <div className="flex items-center gap-2.5 text-ink/40 text-[11px] font-bold uppercase tracking-[0.2em]">
+                            <MapPin size={16} className="text-gold" />
+                            {acc.location || acc.city || "Available Location"}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-ink/20 mb-1">Monthly Rent</p>
+                          <p className="text-3xl font-serif text-gold">LKR {acc.price?.toLocaleString() || "..."}</p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-ink/20">Move-in Date</p>
-                        <p className="text-xl font-serif text-ink">
-                          {booking.moveInDate ? new Date(booking.moveInDate).toLocaleDateString() : 'Immediate'}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-ink/20">Deposit</p>
-                        <p className="text-xl font-serif text-ink">LKR {acc.deposit?.toLocaleString() || "0"}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-ink/20">Payment</p>
-                        <p className={cn("text-xl font-serif", booking.paymentProof ? "text-emerald-600" : "text-amber-600")}>
-                          {booking.paymentProof ? 'Receipt Sent' : 'Awaiting Proof'}
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="flex justify-end gap-4 pt-4">
-                      {!isCanceled && (
-                        <button
-                          onClick={() => { setSelectedBooking(booking); setIsCancelModalOpen(true); }}
-                          className="px-8 py-4 bg-red-50 text-red-600 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all duration-300"
-                        >
-                          {isApproved ? "End Membership" : "Cancel Request"}
-                        </button>
-                      )}
-                      
-                      {!isApproved && !isCanceled && (
-                        <button
-                          onClick={() => { setSelectedBooking(booking); setIsUploadModalOpen(true); }}
-                          className="px-8 py-4 bg-ink text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-300"
-                        >
-                          Update Receipt
-                        </button>
-                      )}
+                      {/* Timeline Flow */}
+                      <div className="pt-4 border-t border-black/5">
+                         <BookingStatusTimeline status={booking.status} hasReceipt={!!booking.paymentProof} />
+                      </div>
+
+                      {/* Specs Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-8 py-10 border-t border-black/5">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-ink/30">
+                            <Calendar size={14} />
+                            <p className="text-[10px] font-bold uppercase tracking-widest">Move-in</p>
+                          </div>
+                          <p className="text-lg font-serif text-ink">{booking.roomType || "Shared Accommodation"}</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-ink/30">
+                            <ShieldCheck size={14} />
+                            <p className="text-[10px] font-bold uppercase tracking-widest">Verification</p>
+                          </div>
+                          <p className={cn("text-lg font-serif", booking.paymentProof ? "text-emerald-600" : "text-amber-600")}>
+                            {booking.paymentProof ? 'Receipt Verified' : 'Awaiting Proof'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-6 pt-10 border-t border-black/5">
+                        <div className="flex gap-4">
+                          {!isCanceled && (
+                            <button
+                              onClick={() => { setSelectedBooking(booking); setIsCancelModalOpen(true); }}
+                              className="px-8 py-5 border border-red-100 text-red-500 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-all duration-300"
+                            >
+                              {isApproved ? "End Membership" : "Withdraw Request"}
+                            </button>
+                          )}
+                        </div>
+                        
+                        <div className="flex gap-4">
+                          {isApproved && (
+                            <button
+                              onClick={() => { setSelectedBooking(booking); setIsPaymentsModalOpen(true); }}
+                              className="px-10 py-5 bg-emerald-50 text-emerald-600 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all duration-500 flex items-center gap-3 shadow-sm hover:shadow-emerald-200"
+                            >
+                              <DollarSign size={16} />
+                              Monthly Payments
+                            </button>
+                          )}
+                          
+                          {!isApproved && !isCanceled && (
+                            <button
+                              onClick={() => { setSelectedBooking(booking); setIsUploadModalOpen(true); }}
+                              className="px-12 py-5 bg-ink text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-500 flex items-center gap-3 shadow-xl hover:shadow-gold/20"
+                            >
+                              <Upload size={16} />
+                              {booking.paymentProof ? 'Update Receipt' : 'Upload Receipt'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1038,6 +1178,7 @@ export const MyBookings: React.FC = () => {
           })
         )}
       </div>
+    </div>
 
       <AnimatePresence>
         {isCancelModalOpen && (
@@ -1137,24 +1278,156 @@ export const MyBookings: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-6">
                 <button
-                  onClick={() => { setIsUploadModalOpen(false); setPreviewImage(null); }}
-                  className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-ink transition-colors"
+                  onClick={() => setIsUploadModalOpen(false)}
+                  className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest text-ink/20 hover:text-ink transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  disabled={!previewImage}
-                  onClick={() => {
-                    setIsUploadModalOpen(false);
-                    setPreviewImage(null);
-                    alert("Receipt updated successfully!");
+                  onClick={async () => {
+                    if (!previewImage || !selectedBooking) return;
+                    try {
+                      setIsSubmitting(true);
+                      await bookingService.updateStatus(selectedBooking._id || selectedBooking.id, selectedBooking.status, previewImage);
+                      alert('Receipt updated successfully!');
+                      setIsUploadModalOpen(false);
+                      setPreviewImage(null);
+                      fetchBookings();
+                    } catch (err) {
+                      console.error(err);
+                      alert('Failed to update receipt.');
+                    } finally {
+                      setIsSubmitting(false);
+                    }
                   }}
-                  className="flex-1 py-5 bg-ink text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gold disabled:opacity-20 disabled:hover:bg-ink transition-all duration-300"
+                  className="flex-1 py-5 bg-ink text-white rounded-[2rem] text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-500 shadow-xl"
                 >
                   Confirm Upload
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isPaymentsModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setIsPaymentsModalOpen(false); setPreviewImage(null); setPaymentAmount(''); }}
+              className="absolute inset-0 bg-ink/70 backdrop-blur-2xl"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              className="relative w-full max-w-4xl bg-white rounded-[4rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-[85vh]"
+            >
+              {/* Left Side: Upload Form */}
+              <div className="w-full md:w-1/2 p-12 lg:p-16 space-y-10 bg-paper/50 overflow-y-auto">
+                <div className="space-y-3">
+                  <h2 className="text-4xl font-serif text-ink">New Payment</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-ink/30">Upload your monthly rent proof</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ink/40 ml-4">Payment Amount (LKR)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 25000"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      className="w-full px-8 py-5 rounded-2xl bg-white border border-black/5 text-ink outline-none focus:ring-2 focus:ring-gold/20 transition-all font-serif text-lg"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ink/40 ml-4">Receipt Image</label>
+                    <div className="relative aspect-[4/3] rounded-3xl border-2 border-dashed border-black/10 bg-white flex flex-col items-center justify-center overflow-hidden transition-all hover:border-gold/30">
+                      {previewImage ? (
+                        <>
+                          <img src={previewImage} className="w-full h-full object-cover" />
+                          <button
+                            onClick={() => setPreviewImage(null)}
+                            className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur shadow-md rounded-full text-red-500"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={32} className="text-ink/10 mb-3" />
+                          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-ink/30">Drop Receipt Here</p>
+                          <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleImageChange} />
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleMonthlyPaymentUpload}
+                    disabled={isSubmitting || !previewImage || !paymentAmount}
+                    className="w-full py-6 bg-emerald-500 text-white rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-emerald-600 transition-all duration-500 shadow-xl shadow-emerald-500/20 disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Processing...' : 'Submit Payment Proof'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Side: History */}
+              <div className="w-full md:w-1/2 p-12 lg:p-16 space-y-10 bg-white flex flex-col">
+                <div className="flex justify-between items-center pb-6 border-b border-black/5">
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-serif text-ink">Payment History</h3>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-ink/20">All tracked monthly transfers</p>
+                  </div>
+                  <FileText size={24} className="text-ink/10" />
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-6 pr-4">
+                  {selectedBooking?.monthlyPayments?.length > 0 ? (
+                    selectedBooking.monthlyPayments.map((pay: any, idx: number) => (
+                      <div key={idx} className="p-6 rounded-3xl bg-paper/30 border border-black/5 flex items-center justify-between group hover:bg-white hover:shadow-lg transition-all duration-500">
+                        <div className="flex items-center gap-5">
+                          <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center",
+                            pay.status === 'Approved' ? "bg-emerald-50 text-emerald-500" : "bg-gold/10 text-gold"
+                          )}>
+                            <DollarSign size={20} />
+                          </div>
+                          <div>
+                            <p className="text-lg font-serif text-ink">LKR {pay.amount?.toLocaleString()}</p>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-ink/20">{new Date(pay.date).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className={cn(
+                          "px-3 py-1.5 rounded-full text-[8px] font-bold uppercase tracking-widest",
+                          pay.status === 'Approved' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                        )}>
+                          {pay.status}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-30">
+                      <History size={48} strokeWidth={1} />
+                      <p className="text-[10px] font-bold uppercase tracking-widest uppercase">No payment history yet</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-6">
+                  <button
+                     onClick={() => setIsPaymentsModalOpen(false)}
+                     className="w-full py-4 text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-ink transition-colors"
+                  >
+                    Close Dashboard
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

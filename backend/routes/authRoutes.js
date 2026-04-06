@@ -24,6 +24,16 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
+        
+        // Mock Mode Fallback (Emergency Recovery)
+        const isMockMode = req.app.get('isMockMode');
+        if (isMockMode && email === "student@test.com" && password === "password123") {
+            return res.json({ 
+                token: "mock_token", 
+                user: { id: "mock_student_id", name: "Test Student", email: "student@test.com", role: "STUDENT" } 
+            });
+        }
+
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ error: "Invalid credentials" });
 

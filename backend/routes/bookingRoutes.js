@@ -13,7 +13,6 @@ router.post("/", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
 // Get bookings for properties belonging to a specific owner
 router.get("/owner/:ownerId", async (req, res) => {
     try {
@@ -22,8 +21,22 @@ router.get("/owner/:ownerId", async (req, res) => {
         const propertyIds = properties.map(p => p._id);
 
         // 2. Find all bookings that reference those accommodations
-        const bookings = await Booking.find({ accommodationId: { $in: propertyIds } }).populate("accommodationId");
+        const bookings = await Booking.find({ accommodationId: { $in: propertyIds } })
+            .select("-paymentProof -monthlyPayments.proof")
+            .populate("accommodationId", "name city location")
+            .sort({ createdAt: -1 });
         res.json(bookings);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get a single booking with full details (including proofs)
+router.get("/:id", async (req, res) => {
+    try {
+        const booking = await Booking.findById(req.params.id).populate("accommodationId");
+        if (!booking) return res.status(404).json({ error: "Booking not found" });
+        res.json(booking);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -33,7 +46,8 @@ router.get("/owner/:ownerId", async (req, res) => {
 router.get("/student/:studentId", async (req, res) => {
     try {
         const bookings = await Booking.find({ studentId: req.params.studentId })
-            .populate("accommodationId")
+            .select("-paymentProof -monthlyPayments.proof")
+            .populate("accommodationId", "name city image location price propertyType")
             .sort({ createdAt: -1 }); // newest first
         res.json(bookings);
     } catch (err) {
@@ -54,6 +68,27 @@ router.put("/:id/status", async (req, res) => {
             { new: true }
         );
         res.json(updatedBooking);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Add a monthly payment receipt
+router.post("/:id/payments", async (req, res) => {
+    try {
+        const { amount, proof } = req.body;
+        const booking = await Booking.findById(req.params.id);
+        if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+        booking.monthlyPayments.push({
+            date: new Date(),
+            amount,
+            proof,
+            status: "Pending"
+        });
+
+        await booking.save();
+        res.status(201).json(booking);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

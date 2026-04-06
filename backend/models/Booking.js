@@ -15,8 +15,20 @@ const bookingSchema = new mongoose.Schema({
     contactNo: { type: String },
     moveInDate: { type: Date },
     notes: { type: String },
-    status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" }
+    status: { type: String, enum: ["Pending", "Approved", "Rejected", "Canceled"], default: "Pending" },
+    monthlyPayments: [
+        {
+            date: { type: Date, default: Date.now },
+            amount: Number,
+            proof: String, // base64 receipt
+            status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" }
+        }
+    ]
 }, { timestamps: true });
+
+// Add indexes for faster lookups
+bookingSchema.index({ studentId: 1 });
+bookingSchema.index({ accommodationId: 1 });
 
 const Booking = mongoose.model("Booking", bookingSchema);
 

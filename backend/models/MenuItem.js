@@ -10,6 +10,9 @@ const menuItemSchema = new mongoose.Schema({
     status: { type: String, enum: ['Available', 'Not Available'], default: 'Available' }
 }, { timestamps: true });
 
+// Add index for faster menu lookups
+menuItemSchema.index({ canteenId: 1 });
+
 const MenuItem = mongoose.model("MenuItem", menuItemSchema);
 
 module.exports = MenuItem;
