@@ -20,6 +20,14 @@ const userSchema = new mongoose.Schema(
             enum: ['STUDENT', 'BOARDING_OWNER', 'RESTAURANT_OWNER', 'ADMIN'],
             default: 'STUDENT',
             required: true
+        },
+        warning: {
+            type: Number,
+            default: 0
+        },
+        warningNote: {
+            type: String,
+            default: ""
         }
     },
     { timestamps: true }

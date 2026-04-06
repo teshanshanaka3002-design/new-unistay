@@ -24,6 +24,9 @@ const accommodationRoutes = require("./routes/accommodationRoutes");
 const restaurantRoutes = require("./routes/restaurantRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const User = require("./models/User");
+const bcrypt = require("bcryptjs");
 
 // Mount routes
 app.use("/api/auth", authRoutes);
@@ -31,6 +34,28 @@ app.use("/api/accommodations", accommodationRoutes);
 app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/admin", adminRoutes);
+
+// Ensure default admin exists
+const initializeAdmin = async () => {
+    try {
+        const adminEmail = "admin@unistay.com";
+        const exists = await User.findOne({ email: adminEmail });
+        if (!exists) {
+            const hashedPassword = await bcrypt.hash("admin@password123", 10);
+            const admin = new User({
+                name: "System Admin",
+                email: adminEmail,
+                password: hashedPassword,
+                role: "ADMIN"
+            });
+            await admin.save();
+            console.log("✅ Default Admin Created: admin@unistay.com / admin@password123");
+        }
+    } catch (err) {
+        console.error("❌ Error initializing admin:", err.message);
+    }
+};
 
 // Base route for sanity check
 app.get("/", (req, res) => {
@@ -43,6 +68,7 @@ mongoose
     .connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 })
     .then(() => {
         console.log("✅ MongoDB Connected");
+        initializeAdmin();
     })
     .catch((err) => {
         console.error("❌ MongoDB connection error. Entering MOCK MODE for development.");

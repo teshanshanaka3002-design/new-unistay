@@ -12,6 +12,8 @@ export interface User {
   studentId?: string;
   nationalId?: string;
   avatar?: string;
+  warning?: number;
+  warningNote?: string;
 }
 
 interface AuthContextType {

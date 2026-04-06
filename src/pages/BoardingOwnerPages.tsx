@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { accommodationService, bookingService } from '../services/api';
-import { Card, Button, Input, Modal } from '../components/UI';
+import { Card, Button, Input, Modal, Badge } from '../components/UI';
 import { 
   Plus, 
   Settings, 
@@ -28,7 +28,8 @@ import {
   Phone,
   Mail,
   User,
-  BarChart3
+  BarChart3,
+  AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { sanitizePhoneNumber, compressImage } from '../lib/inputControl';
@@ -67,6 +68,32 @@ export const DashboardOverview: React.FC = () => {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 p-6 md:p-12">
+      {/* Administrative Warning Banner */}
+      {user && user.warning > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-8 rounded-[2.5rem] bg-amber-50 border border-amber-200 shadow-xl shadow-amber-500/5 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="w-16 h-16 rounded-3xl bg-amber-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/20 shrink-0">
+            <AlertTriangle size={32} />
+          </div>
+          <div className="flex-1 space-y-2 text-center md:text-left">
+            <h3 className="text-xl font-serif text-amber-900 flex items-center justify-center md:justify-start gap-3">
+              Official System Warning
+              <Badge className="bg-amber-100 text-amber-600 border-amber-200">Level {user.warning}</Badge>
+            </h3>
+            <p className="text-amber-800/70 font-medium">
+              Admin Note: <span className="text-amber-900 italic">"{user.warningNote || "Please review your recent listings for compliance with our safety standards."}"</span>
+            </p>
+          </div>
+          <Button variant="outline" className="rounded-xl border-amber-200 text-amber-700 hover:bg-amber-100 shadow-sm shrink-0">
+            Acknowledge
+          </Button>
+        </motion.div>
+      )}
+
       {/* Welcome Hero Area */}
       <div className="relative overflow-hidden rounded-[3rem] bg-ink text-white p-10 md:p-14 shadow-2xl">
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gold/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />

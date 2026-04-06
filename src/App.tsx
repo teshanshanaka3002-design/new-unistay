@@ -32,12 +32,8 @@ import {
 } from './pages/RestaurantOwnerPages';
 import { 
   AdminDashboard, 
-  UsersManagement,
-  BoardingApprovals,
-  RestaurantApprovals,
-  PaymentsManagement,
-  ReviewsManagement,
-  SystemStatistics
+  AdminUserManagement,
+  AdminContentManagement
 } from './pages/AdminPages';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from './components/UI';
@@ -187,39 +183,19 @@ export default function App() {
           } />
 
           {/* Admin Routes */}
-          <Route path="/dashboard/admin" element={
+          <Route path="/admin-dashboard" element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
               <DashboardLayout><AdminDashboard /></DashboardLayout>
             </ProtectedRoute>
           } />
           <Route path="/admin/users" element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
-              <DashboardLayout><UsersManagement /></DashboardLayout>
+              <DashboardLayout><AdminUserManagement /></DashboardLayout>
             </ProtectedRoute>
           } />
-          <Route path="/admin/boarding-approvals" element={
+          <Route path="/admin/content" element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
-              <DashboardLayout><BoardingApprovals /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/restaurant-approvals" element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-              <DashboardLayout><RestaurantApprovals /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/payments" element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-              <DashboardLayout><PaymentsManagement /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/reviews" element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-              <DashboardLayout><ReviewsManagement /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/statistics" element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-              <DashboardLayout><SystemStatistics /></DashboardLayout>
+              <DashboardLayout><AdminContentManagement /></DashboardLayout>
             </ProtectedRoute>
           } />
 

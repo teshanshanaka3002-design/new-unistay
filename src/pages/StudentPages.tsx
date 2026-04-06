@@ -60,13 +60,17 @@ import {
 import { MapSection } from '../components/MapSection';
 import { RequestSystem } from '../components/requests/RequestSystem';
 import Chatbot from '../components/Chatbot';
+import { adminService } from '../services/api';
 
 // --- Student Dashboard ---
 export const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
 
-  const slides = [
+  const [slides, setSlides] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const defaultSlides = [
     {
       image: "https://static.sliit.lk/wp-content/uploads/2024/09/13103301/SLIIT-Convocation-2024-September-6.jpeg",
       title: "Celebrate your success,",
@@ -78,27 +82,54 @@ export const StudentDashboard: React.FC = () => {
       title: "Join the community,",
       subtitle: "of future leaders.",
       desc: "Connect with thousands of fellow students. Share experiences, find roommates, and grow together."
-    },
-    {
-      image: "https://utscollege.edu.lk/getmedia/4b87c23b-c5bd-4eff-b2d8-81ad29c306bb/1724900197-sl-hero-banner_start-in-october-dk.jpg",
-      title: "Start your journey,",
-      subtitle: "with the right stay.",
-      desc: "Find verified boarding houses and apartments near your university. Safe, secure, and student-friendly."
-    },
-    {
-      image: "https://umsl.campus-dining.com/wp-content/themes/he-ada/assets/img/menus/Menus-Hero.webp",
-      title: "Fuel your ambition,",
-      subtitle: "with healthy meals.",
-      desc: "Pre-order from campus canteens and skip the queue. Fresh, affordable, and student-focused meals."
     }
   ];
 
   useEffect(() => {
+    fetchHero();
+  }, []);
+
+  const fetchHero = async () => {
+    try {
+      setLoading(true);
+      const res = await adminService.getHeroContent();
+      if (res.data && res.data.length > 0) {
+        setSlides(res.data);
+      } else {
+        setSlides(defaultSlides);
+      }
+    } catch (err) {
+      setSlides(defaultSlides);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (slides.length === 0) return;
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides]);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-paper relative overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-ink/5 rounded-full blur-[120px] animate-pulse delay-700" />
+        <div className="relative flex flex-col items-center gap-8">
+          <div className="w-16 h-16 bg-ink rounded-full flex items-center justify-center text-white animate-bounce shadow-2xl">
+            <span className="font-serif text-2xl font-bold">S</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <div className="text-[10px] font-bold uppercase tracking-[0.4em] text-ink/20 transform translate-x-[0.2em]">Preparing your Nest</div>
+            <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-gold to-transparent animate-shimmer" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-32 pb-32">
@@ -114,7 +145,7 @@ export const StudentDashboard: React.FC = () => {
             className="absolute inset-0"
           >
             <img
-              src={slides[index].image}
+              src={slides[index]?.image}
               alt="Hero"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
@@ -137,12 +168,12 @@ export const StudentDashboard: React.FC = () => {
             </div>
 
             <h1 className="text-6xl md:text-[8rem] font-serif leading-[0.85] text-white tracking-tight">
-              {slides[index].title} <br />
-              <span className="italic text-gold">{slides[index].subtitle}</span>
+              {slides[index]?.title} <br />
+              <span className="italic text-gold">{slides[index]?.subtitle}</span>
             </h1>
 
             <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto leading-relaxed font-medium">
-              {slides[index].desc}
+              {slides[index]?.desc}
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-8">

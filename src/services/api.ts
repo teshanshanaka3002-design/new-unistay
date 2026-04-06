@@ -83,3 +83,14 @@ export const restaurantService = {
   getOrdersByStudent: (studentId: string) => api.get(`/orders/student/${studentId}`),
   updateOrderStatus: (id: string, status: string) => api.put(`/orders/${id}/status`, { status }),
 };
+
+export const adminService = {
+  getStats: () => api.get('/admin/stats'),
+  getOwners: () => api.get('/admin/owners'),
+  getOwnerListings: (id: string) => api.get(`/admin/owner/${id}/listings`),
+  warnUser: (id: string, note?: string) => api.post(`/admin/warn/${id}`, { note }),
+  banUser: (id: string) => api.delete(`/admin/ban/${id}`),
+  getHeroContent: () => api.get('/admin/hero'),
+  createHeroContent: (data: any) => api.post('/admin/hero', data),
+  deleteHeroContent: (id: string) => api.delete(`/admin/hero/${id}`)
+};

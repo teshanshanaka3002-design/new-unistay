@@ -26,7 +26,7 @@ export const LoginPage: React.FC = () => {
       const dashboardPath = user.role === 'STUDENT' ? '/dashboard/student' : 
                           user.role === 'BOARDING_OWNER' ? '/owner-dashboard' :
                           user.role === 'RESTAURANT_OWNER' ? '/restaurant-dashboard' :
-                          '/dashboard/admin';
+                          '/admin-dashboard';
       
       navigate(dashboardPath);
     } catch (err: any) {

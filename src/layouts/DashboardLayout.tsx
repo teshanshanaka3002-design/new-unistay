@@ -18,7 +18,8 @@ import {
   CheckCircle, 
   BarChart3,
   CreditCard,
-  GraduationCap
+  GraduationCap,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useAuth, Role } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -63,14 +64,10 @@ const navItems: NavItem[] = [
   { label: 'Profile', path: '/restaurant/profile', icon: <User size={20} />, roles: ['RESTAURANT_OWNER'] },
 
   // Admin
-  { label: 'Dashboard', path: '/dashboard/admin', icon: <LayoutDashboard size={20} />, roles: ['ADMIN'] },
-  { label: 'Users Management', path: '/admin/users', icon: <Users size={20} />, roles: ['ADMIN'] },
-  { label: 'Boarding Approvals', path: '/admin/boarding-approvals', icon: <CheckCircle size={20} />, roles: ['ADMIN'] },
-  { label: 'Restaurant Approvals', path: '/admin/restaurant-approvals', icon: <CheckCircle size={20} />, roles: ['ADMIN'] },
-  { label: 'Payment Verification', path: '/admin/payments', icon: <CreditCard size={20} />, roles: ['ADMIN'] },
-  { label: 'Reviews Management', path: '/admin/reviews', icon: <Star size={20} />, roles: ['ADMIN'] },
-  { label: 'System Statistics', path: '/admin/statistics', icon: <BarChart3 size={20} />, roles: ['ADMIN'] },
-  { label: 'Profile', path: '/profile', icon: <User size={20} />, roles: ['ADMIN'] },
+  { label: 'Admin Dashboard', path: '/admin-dashboard', icon: <LayoutDashboard size={20} />, roles: ['ADMIN'] },
+  { label: 'User Management', path: '/admin/users', icon: <Users size={20} />, roles: ['ADMIN'] },
+  { label: 'Hero Studio', path: '/admin/content', icon: <ImageIcon size={20} />, roles: ['ADMIN'] },
+  { label: 'System Profile', path: '/profile', icon: <User size={20} />, roles: ['ADMIN'] },
 ];
 
 export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -140,7 +137,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end">
             <span className="text-sm font-bold text-ink">{user?.name}</span>
-            <span className="text-[10px] uppercase tracking-widest text-ink/40 font-bold">{user?.role.replace('_', ' ')}</span>
+            <span className="text-[10px] uppercase tracking-widest text-ink/40 font-bold">{user?.role?.replace('_', ' ')}</span>
           </div>
           <div className="relative" ref={dropdownRef}>
             <button 
@@ -150,7 +147,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               {user?.avatar ? (
                 <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
               ) : (
-                user?.name.charAt(0)
+                user?.name?.charAt(0)
               )}
             </button>
             <AnimatePresence>
