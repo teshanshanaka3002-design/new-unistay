@@ -1098,7 +1098,14 @@ export const RestaurantPublicProfile: React.FC = () => {
               <Input label="Email" value={formData.email} disabled={!isEditing} onChange={e => setFormData({ ...formData, email: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Input label="Phone Number" value={formData.phone} disabled={!isEditing} maxLength={10} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+              <Input label="Phone Number" value={formData.phone} disabled={!isEditing} onChange={e => {
+              // Strips non-numeric characters and limits to 10 digits
+              const value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 10) {
+                  setFormData({ ...formData, phone: value });
+                }
+              }} 
+              />
             </div>
             <div className="space-y-2">
               <Input label="Role" value="Restaurant Owner" disabled />
