@@ -774,6 +774,8 @@ export const BookingsPage: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [bookingToDelete, setBookingToDelete] = useState<any>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -812,6 +814,20 @@ export const BookingsPage: React.FC = () => {
       alert("Failed to load booking details.");
     } finally {
       setLoadingDetails(false);
+    }
+  };
+
+  const handleDeleteBooking = async () => {
+    if (!bookingToDelete) return;
+    try {
+      await bookingService.delete(bookingToDelete._id || bookingToDelete.id);
+      setBookings(prev => prev.filter(b => (b._id || b.id) !== (bookingToDelete._id || bookingToDelete.id)));
+      setIsDeleteModalOpen(false);
+      setBookingToDelete(null);
+      alert("Booking deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete booking.");
     }
   };
 
@@ -879,6 +895,17 @@ export const BookingsPage: React.FC = () => {
                       )}
                       <Button size="sm" variant="outline" className="w-10 h-10 p-0 rounded-xl border-black/5" onClick={() => handleViewBooking(booking)}>
                         <Eye size={16} className="text-ink/20" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-10 h-10 p-0 rounded-xl border-black/5 text-red-500 hover:bg-red-50 hover:border-red-100 transition-all duration-500" 
+                        onClick={() => {
+                          setBookingToDelete(booking);
+                          setIsDeleteModalOpen(true);
+                        }}
+                      >
+                        <Trash2 size={16} />
                       </Button>
                     </div>
                   </td>
@@ -948,6 +975,32 @@ export const BookingsPage: React.FC = () => {
             </div>
           </div>
         ) : null}
+      </Modal>
+
+      {/* Delete Booking Confirmation Modal */}
+      <Modal 
+        isOpen={isDeleteModalOpen} 
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setBookingToDelete(null);
+        }}
+        title="Delete Booking"
+      >
+        <div className="space-y-6">
+          <p className="text-ink/60">Are you sure you want to delete this booking? This action cannot be undone.</p>
+          {bookingToDelete?.status === 'Approved' && (
+             <div className="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm font-medium">
+               Warning: This booking is already approved. Deleting it will cancel the student's reservation.
+             </div>
+          )}
+          <div className="flex justify-end gap-4">
+            <Button variant="outline" onClick={() => {
+              setIsDeleteModalOpen(false);
+              setBookingToDelete(null);
+            }}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteBooking}>Delete Booking</Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

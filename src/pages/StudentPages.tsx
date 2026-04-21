@@ -956,8 +956,8 @@ export const FindRestaurants: React.FC = () => {
 const BookingStatusTimeline: React.FC<{ status: string, hasReceipt: boolean }> = ({ status, hasReceipt }) => {
   const steps = [
     { label: 'Request Sent', completed: true },
-    { label: 'Doc Uploaded', completed: hasReceipt },
-    { label: 'Under Review', completed: status === 'Approved' || (status === 'Pending' && hasReceipt), active: status === 'Pending' && hasReceipt },
+    { label: 'Doc Uploaded', completed: hasReceipt || status === 'Approved', active: !hasReceipt && status !== 'Canceled' && status !== 'Rejected' },
+    { label: 'Under Review', completed: status === 'Approved', active: status === 'Pending' && hasReceipt },
     { label: 'Approved', completed: status === 'Approved' }
   ];
 
@@ -1369,11 +1369,13 @@ export const MyBookings: React.FC = () => {
                     if (!previewImage || !selectedBooking) return;
                     try {
                       setIsSubmitting(true);
-                      await bookingService.updateStatus(selectedBooking._id || selectedBooking.id, selectedBooking.status, previewImage);
+                      await bookingService.uploadPaymentProof(selectedBooking._id || selectedBooking.id, previewImage);
                       alert('Receipt updated successfully!');
+                      setBookings(prev => prev.map(b => 
+                        (b._id || b.id) === (selectedBooking._id || selectedBooking.id) ? { ...b, paymentProof: previewImage } : b
+                      ));
                       setIsUploadModalOpen(false);
                       setPreviewImage(null);
-                      fetchBookings();
                     } catch (err) {
                       console.error(err);
                       alert('Failed to update receipt.');
@@ -1381,9 +1383,10 @@ export const MyBookings: React.FC = () => {
                       setIsSubmitting(false);
                     }
                   }}
-                  className="flex-1 py-5 bg-ink text-white rounded-[2rem] text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-500 shadow-xl"
+                  disabled={isSubmitting}
+                  className="flex-1 py-5 bg-ink text-white rounded-[2rem] text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-500 shadow-xl disabled:opacity-50"
                 >
-                  Confirm Upload
+                  {isSubmitting ? 'Uploading...' : 'Confirm Upload'}
                 </button>
               </div>
             </motion.div>

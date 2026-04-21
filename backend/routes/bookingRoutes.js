@@ -73,6 +73,24 @@ router.put("/:id/status", async (req, res) => {
     }
 });
 
+// Upload payment proof
+router.put("/:id/proof", async (req, res) => {
+    try {
+        const { paymentProof } = req.body;
+        const updatedBooking = await Booking.findByIdAndUpdate(
+            req.params.id,
+            { paymentProof },
+            { new: true }
+        );
+        if (!updatedBooking) {
+            return res.status(404).json({ error: "Booking not found" });
+        }
+        res.json(updatedBooking);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Add a monthly payment receipt
 router.post("/:id/payments", async (req, res) => {
     try {
@@ -89,6 +107,19 @@ router.post("/:id/payments", async (req, res) => {
 
         await booking.save();
         res.status(201).json(booking);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete a booking
+router.delete("/:id", async (req, res) => {
+    try {
+        const deletedBooking = await Booking.findByIdAndDelete(req.params.id);
+        if (!deletedBooking) {
+            return res.status(404).json({ error: "Booking not found" });
+        }
+        res.json({ message: "Booking deleted successfully" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

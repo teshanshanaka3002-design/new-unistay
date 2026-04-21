@@ -59,7 +59,9 @@ export const bookingService = {
   getByOwner: (ownerId: string) => api.get(`/bookings/owner/${ownerId}`),
   getByStudent: (studentId: string) => api.get(`/bookings/student/${studentId}`),
   updateStatus: (id: string, status: string, notes?: string) => api.put(`/bookings/${id}/status`, { status, notes }),
+  uploadPaymentProof: (id: string, paymentProof: string) => api.put(`/bookings/${id}/proof`, { paymentProof }),
   addMonthlyPayment: (id: string, data: { amount: number, proof: string }) => api.post(`/bookings/${id}/payments`, data),
+  delete: (id: string) => api.delete(`/bookings/${id}`),
 };
 
 export const restaurantService = {
