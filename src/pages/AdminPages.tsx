@@ -111,6 +111,8 @@ export const AdminDashboard: React.FC = () => {
 // --- User Management ---
 export const AdminUserManagement: React.FC = () => {
   const [owners, setOwners] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'OWNERS' | 'STUDENTS'>('OWNERS');
   const [loading, setLoading] = useState(true);
   const [selectedOwnerListings, setSelectedOwnerListings] = useState<any>(null);
   const [isListingsModalOpen, setIsListingsModalOpen] = useState(false);
@@ -119,9 +121,29 @@ export const AdminUserManagement: React.FC = () => {
   const [warnNote, setWarnNote] = useState('');
   const [targetUserId, setTargetUserId] = useState('');
 
+  const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<any>(null);
+
   useEffect(() => {
-    fetchOwners();
-  }, []);
+    if (activeTab === 'OWNERS') {
+      fetchOwners();
+    } else {
+      fetchStudents();
+    }
+  }, [activeTab]);
+
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      const res = await adminService.getStudents();
+      setStudents(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const fetchOwners = async () => {
     try {
@@ -163,6 +185,22 @@ export const AdminUserManagement: React.FC = () => {
     }
   };
 
+  const handleStudentRemove = async () => {
+    if (!studentToDelete) return;
+    try {
+      setLoading(true);
+      await adminService.deleteStudent(studentToDelete._id);
+      alert('Student permanently removed.');
+      setIsConfirmDeleteModalOpen(false);
+      setStudentToDelete(null);
+      fetchStudents();
+    } catch (err) {
+      alert('Failed to remove student.');
+      setLoading(false);
+    }
+  };
+
+
   const handleViewListings = async (owner: any) => {
     try {
       setIsListingsModalOpen(true);
@@ -180,12 +218,34 @@ export const AdminUserManagement: React.FC = () => {
     <div className="p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex justify-between items-center text-white p-12 rounded-[3.5rem] bg-gradient-to-br from-ink to-ink/90 shadow-2xl relative overflow-hidden">
         <div className="relative z-10">
-          <h1 className="text-5xl font-serif">Owner Management</h1>
-          <p className="text-white/50 font-medium mt-4 max-w-lg">Monitor, warn, and manage all registered boarding and restaurant owners across the platform.</p>
+          <h1 className="text-5xl font-serif">User Management</h1>
+          <p className="text-white/50 font-medium mt-4 max-w-lg">Monitor, warn, and manage all registered owners and students across the platform.</p>
         </div>
         <Users size={300} className="absolute -right-24 -bottom-24 text-white/5 -rotate-12" />
       </div>
 
+      <div className="flex gap-4 p-2 bg-paper/50 rounded-full border border-black/5 w-fit">
+          {[
+              { id: 'OWNERS', label: 'Owners', icon: Building2 },
+              { id: 'STUDENTS', label: 'Students', icon: Users }
+          ].map((tab: any) => (
+              <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={cn(
+                      "flex items-center gap-3 px-8 py-4 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all",
+                      activeTab === tab.id
+                          ? "bg-ink text-gold shadow-xl"
+                          : "text-ink/40 hover:text-ink hover:bg-white"
+                  )}
+              >
+                  <tab.icon size={16} />
+                  {tab.label}
+              </button>
+          ))}
+      </div>
+
+      {activeTab === 'OWNERS' ? (
       <Card className="rounded-[3rem] border-black/5 overflow-hidden shadow-2xl bg-white/50 backdrop-blur-xl transition-all">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -255,6 +315,64 @@ export const AdminUserManagement: React.FC = () => {
           </table>
         </div>
       </Card>
+      ) : (
+      <Card className="rounded-[3rem] border-black/5 overflow-hidden shadow-2xl bg-white/50 backdrop-blur-xl transition-all">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-paper/50">
+                <th className="py-8 px-10 text-[10px] font-black uppercase tracking-[0.2em] text-ink/30">Student Details</th>
+                <th className="py-8 px-10 text-[10px] font-black uppercase tracking-[0.2em] text-ink/30">Registration Date</th>
+                <th className="py-8 px-10 text-[10px] font-black uppercase tracking-[0.2em] text-right text-ink/30">Management Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/5">
+              {loading ? (
+                 <tr>
+                    <td colSpan={3} className="py-24 text-center">
+                       <div className="w-10 h-10 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                       <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink/30">Retrieving students...</p>
+                    </td>
+                 </tr>
+              ) : students.length > 0 ? students.map((student) => (
+                <tr key={student._id} className="group hover:bg-paper/30 transition-all duration-300">
+                  <td className="py-8 px-10">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-ink text-gold flex items-center justify-center font-serif text-lg uppercase">
+                        {student.name?.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-ink">{student.name}</p>
+                        <p className="text-[10px] text-ink/40 font-bold uppercase tracking-widest">{student.email} {student.contactNumber ? `· ${student.contactNumber}` : ''}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-8 px-10">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink/50">
+                      {new Date(student.createdAt).toLocaleDateString()}
+                    </p>
+                  </td>
+                  <td className="py-8 px-10">
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" size="sm" className="rounded-xl h-11 px-6 gap-2 text-rose-500 border-rose-100 hover:bg-rose-50" onClick={() => { setStudentToDelete(student); setIsConfirmDeleteModalOpen(true); }}>
+                        <Trash2 size={16} /> Remove
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              )) : (
+                 <tr>
+                    <td colSpan={3} className="py-24 text-center">
+                       <Users size={48} className="text-ink/10 mx-auto mb-4" />
+                       <p className="text-sm text-ink/40 font-medium italic">No students registered yet.</p>
+                    </td>
+                 </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+      )}
 
       <Modal isOpen={isListingsModalOpen} onClose={() => setIsListingsModalOpen(false)} title={`Properties by ${selectedOwnerListings?.ownerName}`} maxWidth="3xl">
         {loadingListings ? (
@@ -336,6 +454,28 @@ export const AdminUserManagement: React.FC = () => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal isOpen={isConfirmDeleteModalOpen} onClose={() => setIsConfirmDeleteModalOpen(false)} title="Remove Student" maxWidth="md">
+         <div className="space-y-6">
+           <div className="p-6 bg-rose-50 rounded-3xl border border-rose-100 flex gap-4">
+             <AlertTriangle className="text-rose-500 shrink-0" size={24} />
+             <p className="text-sm text-rose-800 leading-relaxed font-medium">
+               Are you sure you want to remove this user? This action will permanently delete the student from the database.
+             </p>
+           </div>
+           
+           <div className="flex justify-end gap-3 pt-4 border-t border-black/5">
+             <Button variant="outline" onClick={() => setIsConfirmDeleteModalOpen(false)}>Cancel</Button>
+             <Button 
+               className="rounded-full px-8 bg-rose-500 text-white shadow-xl shadow-rose-500/20 hover:bg-rose-600 transition-all"
+               onClick={handleStudentRemove}
+               isLoading={loading}
+             >
+               Remove
+             </Button>
+           </div>
+         </div>
       </Modal>
     </div>
   );

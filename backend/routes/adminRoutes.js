@@ -45,6 +45,28 @@ router.get("/owners", async (req, res) => {
     }
 });
 
+// 🎓 --- Student Management ---
+router.get("/students", async (req, res) => {
+    try {
+        const students = await User.find({ role: 'STUDENT' }).select("-password -__v");
+        res.json(students);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.delete("/students/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        await User.findByIdAndDelete(id);
+        // Note: Students might have bookings or orders, but the requirement specifically says to "permanently delete the user from the database".
+        res.json({ message: "Student permanently deleted" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
 // Get listings for a specific owner
 router.get("/owner/:id/listings", async (req, res) => {
     try {

@@ -93,6 +93,8 @@ export const adminService = {
   getHeroContent: () => api.get('/admin/hero'),
   createHeroContent: (data: any) => api.post('/admin/hero', data),
   deleteHeroContent: (id: string) => api.delete(`/admin/hero/${id}`),
+  getStudents: () => api.get('/admin/students'),
+  deleteStudent: (id: string) => api.delete(`/admin/students/${id}`),
   // New Report related admin endpoints
   getAdminReports: () => api.get('/reports/admin/all'),
   replyToReport: (id: string, data: { message: string, status?: string }) => api.post(`/reports/${id}/reply`, data)
