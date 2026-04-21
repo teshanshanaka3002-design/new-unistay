@@ -60,6 +60,7 @@ export const bookingService = {
   getByStudent: (studentId: string) => api.get(`/bookings/student/${studentId}`),
   updateStatus: (id: string, status: string, notes?: string) => api.put(`/bookings/${id}/status`, { status, notes }),
   addMonthlyPayment: (id: string, data: { amount: number, proof: string }) => api.post(`/bookings/${id}/payments`, data),
+  delete: (id: string) => api.delete(`/bookings/${id}`),
 };
 
 export const restaurantService = {
