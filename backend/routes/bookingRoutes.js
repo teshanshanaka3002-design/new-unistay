@@ -94,19 +94,58 @@ router.put("/:id/proof", async (req, res) => {
 // Add a monthly payment receipt
 router.post("/:id/payments", async (req, res) => {
     try {
-        const { amount, proof } = req.body;
+        const { month, amount, proof } = req.body;
         const booking = await Booking.findById(req.params.id);
         if (!booking) return res.status(404).json({ error: "Booking not found" });
 
         booking.monthlyPayments.push({
             date: new Date(),
+            month,
             amount,
             proof,
-            status: "Pending"
+            status: "Submitted"
         });
 
         await booking.save();
         res.status(201).json(booking);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update a monthly payment status
+router.put("/:id/payments/:paymentId/status", async (req, res) => {
+    try {
+        const { status } = req.body;
+        const booking = await Booking.findById(req.params.id);
+        if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+        const payment = booking.monthlyPayments.id(req.params.paymentId);
+        if (!payment) return res.status(404).json({ error: "Payment not found" });
+
+        payment.status = status;
+        await booking.save();
+        
+        res.json(booking);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get all monthly payments for an owner's properties (aggregating from bookings)
+router.get("/owner/:ownerId/payments", async (req, res) => {
+    try {
+        const properties = await Accommodation.find({ ownerId: req.params.ownerId });
+        const propertyIds = properties.map(p => p._id);
+
+        const bookings = await Booking.find({ 
+            accommodationId: { $in: propertyIds },
+            "monthlyPayments.0": { $exists: true } 
+        })
+        .populate("accommodationId", "name city location")
+        .sort({ updatedAt: -1 });
+        
+        res.json(bookings);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

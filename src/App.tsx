@@ -20,7 +20,8 @@ import {
   BookingsPage,
   RequestsPage,
   ReviewsPage,
-  OwnerProfilePage
+  OwnerProfilePage,
+  MonthlyPaymentsPage
 } from './pages/BoardingOwnerPages';
 import { 
   RestaurantOwnerDashboard, 
@@ -138,6 +139,11 @@ export default function App() {
           <Route path="/owner/student-requests" element={
             <ProtectedRoute allowedRoles={['BOARDING_OWNER']}>
               <DashboardLayout><RequestsPage /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/owner/payments" element={
+            <ProtectedRoute allowedRoles={['BOARDING_OWNER']}>
+              <DashboardLayout><MonthlyPaymentsPage /></DashboardLayout>
             </ProtectedRoute>
           } />
           <Route path="/owner/reviews" element={

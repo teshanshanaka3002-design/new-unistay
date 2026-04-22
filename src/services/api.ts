@@ -60,7 +60,9 @@ export const bookingService = {
   getByStudent: (studentId: string) => api.get(`/bookings/student/${studentId}`),
   updateStatus: (id: string, status: string, notes?: string) => api.put(`/bookings/${id}/status`, { status, notes }),
   uploadPaymentProof: (id: string, paymentProof: string) => api.put(`/bookings/${id}/proof`, { paymentProof }),
-  addMonthlyPayment: (id: string, data: { amount: number, proof: string }) => api.post(`/bookings/${id}/payments`, data),
+  addMonthlyPayment: (id: string, data: { month: string, amount: number, proof: string }) => api.post(`/bookings/${id}/payments`, data),
+  updateMonthlyPaymentStatus: (id: string, paymentId: string, status: string) => api.put(`/bookings/${id}/payments/${paymentId}/status`, { status }),
+  getMonthlyPaymentsByOwner: (ownerId: string) => api.get(`/bookings/owner/${ownerId}/payments`),
   delete: (id: string) => api.delete(`/bookings/${id}`),
 };
 

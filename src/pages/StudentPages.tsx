@@ -1013,6 +1013,7 @@ export const MyBookings: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const [paymentMonth, setPaymentMonth] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -1054,10 +1055,11 @@ export const MyBookings: React.FC = () => {
   };
 
   const handleMonthlyPaymentUpload = async () => {
-    if (!selectedBooking || !previewImage || !paymentAmount) return;
+    if (!selectedBooking || !previewImage || !paymentAmount || !paymentMonth) return;
     try {
       setIsSubmitting(true);
       const res = await bookingService.addMonthlyPayment(selectedBooking._id || selectedBooking.id, {
+        month: paymentMonth,
         amount: parseFloat(paymentAmount),
         proof: previewImage
       });
@@ -1069,6 +1071,7 @@ export const MyBookings: React.FC = () => {
       setIsPaymentsModalOpen(false);
       setPreviewImage(null);
       setPaymentAmount('');
+      setPaymentMonth('');
       alert('Monthly payment proof uploaded successfully!');
     } catch (err) {
       console.error(err);
@@ -1208,8 +1211,8 @@ export const MyBookings: React.FC = () => {
                             <ShieldCheck size={14} />
                             <p className="text-[10px] font-bold uppercase tracking-widest">Verification</p>
                           </div>
-                          <p className={cn("text-lg font-serif", booking.paymentProof ? "text-emerald-600" : "text-amber-600")}>
-                            {booking.paymentProof ? 'Receipt Verified' : 'Awaiting Proof'}
+                          <p className={cn("text-lg font-serif", (booking.paymentProof || booking.monthlyPayments?.length > 0) ? "text-emerald-600" : "text-amber-600")}>
+                            {booking.monthlyPayments?.length > 0 ? "Payment Submitted" : booking.paymentProof ? 'Receipt Verified' : 'Awaiting Proof'}
                           </p>
                         </div>
                       </div>
@@ -1399,7 +1402,7 @@ export const MyBookings: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => { setIsPaymentsModalOpen(false); setPreviewImage(null); setPaymentAmount(''); }}
+              onClick={() => { setIsPaymentsModalOpen(false); setPreviewImage(null); setPaymentAmount(''); setPaymentMonth(''); }}
               className="absolute inset-0 bg-ink/70 backdrop-blur-2xl"
             />
             <motion.div
@@ -1416,6 +1419,20 @@ export const MyBookings: React.FC = () => {
                 </div>
 
                 <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ink/40 ml-4">Payment Month</label>
+                    <select
+                      value={paymentMonth}
+                      onChange={(e) => setPaymentMonth(e.target.value)}
+                      className="w-full px-8 py-5 rounded-2xl bg-white border border-black/5 text-ink outline-none focus:ring-2 focus:ring-gold/20 transition-all font-serif text-lg appearance-none"
+                    >
+                      <option value="">Select Month</option>
+                      {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => (
+                          <option key={m} value={`${m} ${new Date().getFullYear()}`}>{m} {new Date().getFullYear()}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-ink/40 ml-4">Payment Amount (LKR)</label>
                     <input
@@ -1452,7 +1469,7 @@ export const MyBookings: React.FC = () => {
 
                   <button
                     onClick={handleMonthlyPaymentUpload}
-                    disabled={isSubmitting || !previewImage || !paymentAmount}
+                    disabled={isSubmitting || !previewImage || !paymentAmount || !paymentMonth}
                     className="w-full py-6 bg-emerald-500 text-white rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-emerald-600 transition-all duration-500 shadow-xl shadow-emerald-500/20 disabled:opacity-50"
                   >
                     {isSubmitting ? 'Processing...' : 'Submit Payment Proof'}
@@ -1477,18 +1494,18 @@ export const MyBookings: React.FC = () => {
                         <div className="flex items-center gap-5">
                           <div className={cn(
                             "w-12 h-12 rounded-2xl flex items-center justify-center",
-                            pay.status === 'Approved' ? "bg-emerald-50 text-emerald-500" : "bg-gold/10 text-gold"
+                            pay.status === 'Verified' ? "bg-emerald-50 text-emerald-500" : "bg-gold/10 text-gold"
                           )}>
                             <DollarSign size={20} />
                           </div>
                           <div>
                             <p className="text-lg font-serif text-ink">LKR {pay.amount?.toLocaleString()}</p>
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-ink/20">{new Date(pay.date).toLocaleDateString()}</p>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-ink/40">{pay.month || new Date(pay.date).toLocaleDateString()}</p>
                           </div>
                         </div>
                         <div className={cn(
                           "px-3 py-1.5 rounded-full text-[8px] font-bold uppercase tracking-widest",
-                          pay.status === 'Approved' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                          pay.status === 'Verified' ? "bg-emerald-50 text-emerald-600" : pay.status === 'Under Review' ? "bg-blue-50 text-blue-600" : pay.status === 'Rejected' ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"
                         )}>
                           {pay.status}
                         </div>
