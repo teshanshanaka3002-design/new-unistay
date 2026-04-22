@@ -61,18 +61,33 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const handleChange = (name: string, value: string) => {
     setFormData(prev => {
       let nextValue = value;
+
+      // 1. Block numbers for Full Name
+      if (name === 'fullName') {
+        nextValue = value.replace(/[0-9]/g, '');
+      }
+
+      // 2. Sanitize Phone
       if (name === 'phone') {
         nextValue = sanitizePhoneNumber(value);
       }
+
+      // 3. Enforce word limit for notes
       if (name === 'notes') {
         nextValue = enforceWordLimit(prev.notes, value, NOTE_MAX_WORDS);
       }
 
-      setErrors(prevErrors => ({ ...prevErrors, [name]: validateField(name, nextValue) }));
+      // Update the errors state
+      setErrors(prevErrors => ({ 
+        ...prevErrors, 
+        [name]: validateField(name, nextValue) 
+      }));
+
+      // Return the updated form data
       return { ...prev, [name]: nextValue };
     });
   };
-
+  
   const handleBlur = (name: string) => {
     setTouched(prev => ({ ...prev, [name]: true }));
     setErrors(prev => ({ ...prev, [name]: validateField(name, formData[name as keyof typeof formData]) }));
