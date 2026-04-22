@@ -1092,7 +1092,13 @@ export const RestaurantPublicProfile: React.FC = () => {
         <div className="space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <Input label="Full Name" value={formData.name} disabled={!isEditing} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+              <Input label="Full Name" value={formData.name} disabled={!isEditing} onChange={e => {
+                // Allow only letters (a-z, A-Z) and spaces
+                // This regex removes anything that ISN'T a letter or space
+                const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                setFormData({ ...formData, name: value });
+                }} 
+              />
             </div>
             <div className="space-y-2">
               <Input label="Email" value={formData.email} disabled={!isEditing} onChange={e => setFormData({ ...formData, email: e.target.value })} />
