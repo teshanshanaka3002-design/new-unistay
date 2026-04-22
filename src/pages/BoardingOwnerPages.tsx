@@ -29,10 +29,17 @@ import {
   Mail,
   User,
   BarChart3,
-  AlertTriangle
+  AlertTriangle,
+  Calendar
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { sanitizePhoneNumber, compressImage } from '../lib/inputControl';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 // --- Dashboard Overview ---
 export const DashboardOverview: React.FC = () => {
@@ -1294,3 +1301,197 @@ export const OwnerProfilePage: React.FC = () => {
     </div>
   );
 };
+
+// --- Monthly Payments Review Page ---
+export const MonthlyPaymentsPage: React.FC = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [selectedProof, setSelectedProof] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPayments();
+  }, [user]);
+
+  const fetchPayments = async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      const res = await bookingService.getMonthlyPaymentsByOwner(user.id);
+      
+      const flatList = res.data.flatMap((booking: any) => 
+        (booking.monthlyPayments || []).map((pay: any) => ({
+          bookingId: booking._id || booking.id,
+          paymentId: pay._id || pay.id,
+          studentName: booking.fullName,
+          contactNo: booking.contactNo,
+          property: booking.accommodationId?.name || 'Unknown Property',
+          month: pay.month,
+          amount: pay.amount,
+          date: pay.date,
+          proof: pay.proof,
+          status: pay.status,
+        }))
+      );
+      
+      flatList.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setPayments(flatList);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (bookingId: string, paymentId: string, status: string) => {
+    try {
+      await bookingService.updateMonthlyPaymentStatus(bookingId, paymentId, status);
+      setPayments(prev => prev.map(p => 
+        p.paymentId === paymentId ? { ...p, status } : p
+      ));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update status');
+    }
+  };
+
+  return (
+    <div className="p-6 md:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div>
+        <h1 className="text-4xl font-serif text-ink">Monthly Payments</h1>
+        <p className="text-ink/40 font-medium">Review and verify rent payments submitted by your students.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        {loading ? (
+          <p className="text-ink/40">Loading payment records...</p>
+        ) : payments.length === 0 ? (
+          <div className="col-span-full py-20 text-center bg-white rounded-[3rem] shadow-xl border border-black/5">
+            <h2 className="text-2xl font-serif text-ink mb-2">No Payments Found</h2>
+            <p className="text-ink/40">Students haven't submitted any monthly rent recipes yet.</p>
+          </div>
+        ) : (
+          payments.map((pay, i) => (
+            <Card key={pay.paymentId || i} className="relative p-0 border-none bg-white rounded-[2.5rem] shadow-xl shadow-ink/5 overflow-hidden group hover:shadow-2xl transition-all duration-700 flex flex-col justify-between">
+              {/* Decorative Header bg */}
+              <div className="h-24 bg-gradient-to-br from-paper to-white border-b border-black/5 absolute top-0 left-0 right-0" />
+              
+              <div className="p-8 pt-10 space-y-8 relative z-10">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-ink to-ink/80 text-white rounded-2xl flex items-center justify-center font-serif text-2xl shadow-lg shadow-ink/20">
+                      {pay.studentName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-serif text-ink tracking-tight">{pay.studentName}</h3>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-ink/40 mt-1 flex items-center gap-1">
+                        <MapPin size={10} className="text-gold" />
+                        {pay.property}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest border shadow-sm",
+                    pay.status === 'Verified' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : 
+                    pay.status === 'Under Review' ? "bg-blue-50 text-blue-600 border-blue-100" : 
+                    pay.status === 'Rejected' ? "bg-red-50 text-red-600 border-red-100" : 
+                    "bg-amber-50 text-amber-600 border-amber-100 animate-pulse"
+                  )}>
+                    {pay.status}
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-3xl bg-paper/50 border border-black/5 space-y-4">
+                   <div className="grid grid-cols-2 gap-6">
+                     <div className="space-y-1.5">
+                       <p className="text-[9px] font-bold uppercase tracking-widest text-ink/30 flex items-center gap-1">
+                         <Calendar size={12} className="text-ink/20" />
+                         Rent Month
+                       </p>
+                       <p className="font-serif text-ink text-lg">{pay.month || new Date(pay.date).toLocaleDateString()}</p>
+                     </div>
+                     <div className="space-y-1.5">
+                       <p className="text-[9px] font-bold uppercase tracking-widest text-ink/30 flex items-center gap-1">
+                         <DollarSign size={12} className="text-ink/20" />
+                         Amount Paid
+                       </p>
+                       <p className="font-serif text-gold text-xl">LKR {pay.amount?.toLocaleString()}</p>
+                     </div>
+                   </div>
+                </div>
+              </div>
+
+              <div className="p-8 pt-0 relative z-10 space-y-4 mt-auto">
+                <Button 
+                   variant="outline" 
+                   className="w-full h-14 flex items-center justify-center gap-3 rounded-2xl border-black/5 bg-white hover:bg-paper hover:border-black/10 transition-all font-bold text-xs uppercase tracking-widest text-ink shadow-sm"
+                   onClick={() => setSelectedProof(pay.proof)}
+                >
+                   <Eye size={18} className="text-gold" /> View Uploaded Receipt
+                </Button>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                   {pay.status !== 'Verified' && pay.status !== 'Rejected' && (
+                     <Button 
+                       className="flex-1 h-12 bg-emerald-500 text-white hover:bg-emerald-600 border-transparent rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg shadow-emerald-500/20"
+                       onClick={() => handleUpdateStatus(pay.bookingId, pay.paymentId, 'Verified')}
+                     >
+                       <CheckCircle2 size={16} className="mr-2" />
+                       Verify
+                     </Button>
+                   )}
+                   {pay.status === 'Submitted' && (
+                     <Button 
+                       className="flex-1 h-12 bg-blue-50 text-blue-600 hover:bg-blue-100 border-transparent rounded-xl text-xs font-bold uppercase tracking-widest"
+                       onClick={() => handleUpdateStatus(pay.bookingId, pay.paymentId, 'Under Review')}
+                     >
+                       Review
+                     </Button>
+                   )}
+                   {pay.status !== 'Rejected' && (
+                      <Button 
+                        className="flex-none w-12 h-12 p-0 flex flex-col justify-center items-center bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border-transparent rounded-xl transition-colors group"
+                        onClick={() => handleUpdateStatus(pay.bookingId, pay.paymentId, 'Rejected')}
+                        title="Reject Payment"
+                      >
+                        <XCircle size={18} className="transition-transform group-hover:scale-110" />
+                      </Button>
+                   )}
+                </div>
+              </div>
+            </Card>
+          ))
+        )}
+      </div>
+
+      <AnimatePresence>
+        {selectedProof && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedProof(null)}
+              className="absolute inset-0 bg-ink/70 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative max-w-4xl max-h-[90vh] bg-white rounded-3xl overflow-hidden shadow-2xl"
+            >
+              <img src={selectedProof} alt="Payment Proof" className="max-w-full max-h-[90vh] object-contain" />
+              <button 
+                onClick={() => setSelectedProof(null)}
+                className="absolute top-4 right-4 p-2 bg-white/50 backdrop-blur-md rounded-full text-ink hover:bg-white transition-colors shadow-lg"
+              >
+                <XCircle size={24} />
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+

@@ -19,9 +19,10 @@ const bookingSchema = new mongoose.Schema({
     monthlyPayments: [
         {
             date: { type: Date, default: Date.now },
+            month: { type: String, required: true },
             amount: Number,
             proof: String, // base64 receipt
-            status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" }
+            status: { type: String, enum: ["Submitted", "Under Review", "Verified", "Rejected"], default: "Submitted" }
         }
     ]
 }, { timestamps: true });

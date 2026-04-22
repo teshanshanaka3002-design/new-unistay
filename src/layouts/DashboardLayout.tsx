@@ -53,6 +53,7 @@ const navItems: NavItem[] = [
   { label: 'Add New Listing', path: '/owner/add-listing', icon: <PlusCircle size={20} />, roles: ['BOARDING_OWNER'] },
   { label: 'Bookings', path: '/owner/bookings', icon: <BookOpen size={20} />, roles: ['BOARDING_OWNER'] },
   { label: 'Student Requests', path: '/owner/student-requests', icon: <MessageSquare size={20} />, roles: ['BOARDING_OWNER'] },
+  { label: 'Monthly Payments', path: '/owner/payments', icon: <CreditCard size={20} />, roles: ['BOARDING_OWNER'] },
   { label: 'Reviews & Ratings', path: '/owner/reviews', icon: <Star size={20} />, roles: ['BOARDING_OWNER'] },
   { label: 'Profile', path: '/owner/profile', icon: <User size={20} />, roles: ['BOARDING_OWNER'] },
 
